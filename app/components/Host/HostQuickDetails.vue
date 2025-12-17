@@ -4,7 +4,35 @@
       <div v-for="f in otherFields" :key="f.key" class="column is-one-fifth is-full-mobile no-padding" style="min-width:220px;margin-bottom:0.75rem;">
         <div class="quick-detail-item">
           <span class="quick-detail-label">{{ f.label }}</span>
-          <span class="quick-detail-value">{{ f.value ?? '-' }}</span>
+          <span class="quick-detail-value">
+            <template v-if="f.key === 'account' && f.value">
+              <a :href="`https://solscan.io/account/${nodeAddress}`" target="_blank" class="address is-family-monospace">
+                {{ nodeAddress }}
+              </a>
+            </template>
+            <template v-else-if="f.key === 'status'">
+              <div v-if="statusType === 'RUNNING'" style="width: fit-content" class="is-flex">
+                <JobStatus :status="'RUNNING'" />
+              </div>
+              <div v-else-if="statusType === 'QUEUED'" style="width: fit-content" class="is-flex">
+                <JobStatus :status="'QUEUED'" />
+              </div>
+              <span v-else>{{ f.value ?? '-' }}</span>
+            </template>
+            <template v-else-if="f.key === 'runningJob' && f.value">
+              <a :href="`/explorer/job/${f.value}`" class="address is-family-monospace">
+                {{ f.value }}
+              </a>
+            </template>
+            <template v-else-if="f.key === 'hostMarket' && f.value">
+              <a :href="`/explorer/market/${f.value}`" class="address is-family-monospace">
+                {{ f.value }}
+              </a>
+            </template>
+            <template v-else>
+              {{ f.value ?? '-' }}
+            </template>
+          </span>
         </div>
       </div>
     </div>
@@ -13,7 +41,35 @@
       <div v-for="f in importantFields" :key="f.key" class="column is-one-fifth is-full-mobile no-padding" style="min-width:220px;margin-bottom:0.75rem;">
         <div class="quick-detail-item">
           <span class="quick-detail-label">{{ f.label }}</span>
-          <span class="quick-detail-value">{{ f.value ?? '-' }}</span>
+          <span class="quick-detail-value">
+            <template v-if="f.key === 'account' && f.value">
+              <a :href="`https://solscan.io/account/${nodeAddress}`" target="_blank" class="address is-family-monospace">
+                {{ nodeAddress }}
+              </a>
+            </template>
+            <template v-else-if="f.key === 'status'">
+              <div v-if="statusType === 'RUNNING'" style="width: fit-content" class="is-flex">
+                <JobStatus :status="'RUNNING'" />
+              </div>
+              <div v-else-if="statusType === 'QUEUED'" style="width: fit-content" class="is-flex">
+                <JobStatus :status="'QUEUED'" />
+              </div>
+              <span v-else>{{ f.value ?? '-' }}</span>
+            </template>
+            <template v-else-if="f.key === 'runningJob' && f.value">
+              <a :href="`/explorer/job/${f.value}`" class="address is-family-monospace">
+                {{ f.value }}
+              </a>
+            </template>
+            <template v-else-if="f.key === 'hostMarket' && f.value">
+              <a :href="`/explorer/market/${f.value}`" class="address is-family-monospace">
+                {{ f.value }}
+              </a>
+            </template>
+            <template v-else>
+              {{ f.value ?? '-' }}
+            </template>
+          </span>
         </div>
       </div>
     </div>
@@ -21,6 +77,9 @@
 </template>
 
 <script setup lang="ts">
+import JobStatus from "~/components/Job/Status.vue"
+import { type Market } from "@nosana/sdk"
+
 const props = defineProps<{
   nodeAddress: string
   combinedSpecs: any | null
@@ -52,10 +111,41 @@ const cliVersion = computed(() => props.combinedSpecs?.nodeVersion ? `v${props.c
 
 const hostApiStatus = computed(() => props.loadingNodeInfo ? '...' : (props.nodeInfo?.info ? 'Online' : 'Offline'))
 
+const { markets, getMarkets } = useMarkets()
+if (!markets.value) {
+  getMarkets()
+}
+
+const queueInfo = computed(() => {
+  let position = -1
+  const market = markets.value?.find((m) => {
+    position = m.queue.findIndex((a: any) => a.toString() === props.nodeAddress)
+    return position !== -1
+  })
+  if (market) {
+    return { market, position }
+  }
+  return undefined
+})
+
+const isNode = computed(() => {
+  return runningJobAddress.value || totalJobs.value || props.combinedSpecs?.marketAddress || queueInfo.value
+})
+
+const statusType = computed(() => {
+  if (props.loadingNodeInfo || props.loadingJobs) return null
+  if (!isNode.value) return null
+  if (queueInfo.value) return 'QUEUED'
+  if (runningJobAddress.value) return 'RUNNING'
+  return null
+})
+
 const statusText = computed(() => {
   if (props.loadingNodeInfo || props.loadingJobs) return '...'
-  if (!props.combinedSpecs && !totalJobs.value) return 'Not a node'
-  if (props.nodeInfo?.info || runningJobAddress.value) return 'Online'
+  if (!isNode.value) return 'Not a node'
+  if (statusType.value === 'RUNNING') return 'Running'
+  if (statusType.value === 'QUEUED') return 'Queued'
+  if (props.nodeInfo?.info) return '(Re)starting'
   return 'Offline'
 })
 
@@ -82,6 +172,22 @@ const download = computed(() => formatMbps(props.combinedSpecs?.download))
 const upload = computed(() => formatMbps(props.combinedSpecs?.upload))
 
 const allFields = computed(() => [
+  { key: 'account',       label: 'Account',        value: props.nodeAddress },
+  { key: 'status',        label: 'Status',         value: statusText.value },
+  { key: 'nosBalance',    label: 'NOS Balance',    value: props.loadingBalances ? '...' : formatNos(props.nosBalance) },
+  { key: 'nosStaked',     label: 'NOS Staked',     value: props.loadingBalances ? '...' : formatStaked(props.nosStaked) },
+  { key: 'solBalance',    label: 'SOL Balance',    value: props.loadingBalances ? '...' : formatSol(props.solBalance) },
+  { key: 'runningJob',    label: 'Running job',    value: runningJobAddress.value },
+  { key: 'hostMarket',    label: 'Host market',    value: props.combinedSpecs?.marketAddress || null },
+  { key: 'totalJobs',     label: 'Total Jobs',     value: totalJobs.value },
+  { key: 'cliVersion',    label: 'CLI Version',    value: cliVersion.value },
+  { key: 'gpu',           label: 'GPU',            value: gpuName.value },
+  { key: 'nvidiaDriver',  label: 'NVIDIA Driver',  value: props.combinedSpecs?.nvmlVersion || null },
+  { key: 'cudaVersion',   label: 'CUDA Version',    value: props.combinedSpecs?.cudaVersion || null },
+  { key: 'diskSpace',     label: 'Disk Space',     value: diskSpace.value },
+  { key: 'country',       label: 'Country',        value: country.value },
+  { key: 'systemEnv',     label: 'System Environment', value: systemEnv.value },
+
   { key: 'hostApiStatus', label: 'Host API Status', value: hostApiStatus.value },
   { key: 'availability',  label: 'Availability',    value: availability.value },
   { key: 'antiSpoof',     label: 'Anti-spoof %',   value: antiSpoof.value },
@@ -89,23 +195,6 @@ const allFields = computed(() => [
   { key: 'ram',           label: 'RAM',            value: ram.value },
   { key: 'download',      label: 'Download Speed', value: download.value },
   { key: 'upload',        label: 'Upload Speed',   value: upload.value },
-
-  { key: 'status',        label: 'Status',         value: statusText.value },
-  { key: 'account',       label: 'Account',        value: props.nodeAddress },
-  { key: 'nosBalance',    label: 'NOS Balance',    value: props.loadingBalances ? '...' : formatNos(props.nosBalance) },
-  { key: 'nosStaked',     label: 'NOS Staked',     value: props.loadingBalances ? '...' : formatStaked(props.nosStaked) },
-  { key: 'solBalance',    label: 'SOL Balance',    value: props.loadingBalances ? '...' : formatSol(props.solBalance) },
-  { key: 'solAddress',    label: 'Solana Address', value: props.nodeAddress },
-  { key: 'runningJob',    label: 'Running job',    value: runningJobAddress.value },
-  { key: 'hostMarket',    label: 'Host market',    value: props.combinedSpecs?.marketAddress || null },
-  { key: 'totalJobs',     label: 'Total Jobs',     value: totalJobs.value },
-  { key: 'cliVersion',    label: 'CLI Version',    value: cliVersion.value },
-  { key: 'gpu',           label: 'GPU',            value: gpuName.value },
-  { key: 'nvidiaDriver',  label: 'NVIDIA Driver',  value: props.combinedSpecs?.nvmlVersion || null },
-  { key: 'cudaVersion',   label: 'CUDA Version',   value: props.combinedSpecs?.cudaVersion || null },
-  { key: 'diskSpace',     label: 'Disk Space',     value: diskSpace.value },
-  { key: 'country',       label: 'Country',        value: country.value },
-  { key: 'systemEnv',     label: 'System Environment', value: systemEnv.value },
 ])
 
 const importantKeys = new Set(['hostApiStatus','availability','antiSpoof','cpu','ram','download','upload'])
