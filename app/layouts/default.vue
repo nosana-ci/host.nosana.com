@@ -10,7 +10,7 @@
           <slot />
         </div>
       </div>
-      <site-footer class="mt-auto" />
+      <SiteFooter class="mt-auto" />
     </div>
 
     <!-- Login Modal -->
@@ -29,6 +29,7 @@ import { useRedirect } from "~/composables/useRedirect";
 import { useLoginModal } from "~/composables/useLoginModal";
 import { useRouter, useRoute } from "vue-router";
 import LoginModal from "~/components/Auth/LoginModal.vue";
+import SiteFooter from "~/components/Layout/SiteFooter.vue";
 
 // Initialize redirect to handle navigation on connect/disconnect
 useRedirect();
