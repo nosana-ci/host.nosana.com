@@ -1,12 +1,7 @@
 <template>
   <div class="deployment-list-container" ref="containerRef" :style="{ minHeight: dynamicMinHeight }">
   <div class="columns is-mobile is-vcentered mb-4">
-    <div class="column">
-      <h3 class="title is-5 mb-0">
-        {{ title ? title : 'Jobs' }}
-      </h3>
-    </div>
-    <div class="column">
+    <div class="column is-full">
       <div class="is-flex is-justify-content-flex-end is-align-items-center is-flex-wrap-wrap">
         <div v-if="jobs && jobs.length && (!small || (totalJobs && totalJobs > perPage))" class="mr-3 has-text-right">
           <span v-if="totalJobs && totalJobs > perPage">{{ (page - 1) * perPage + 1 }} -

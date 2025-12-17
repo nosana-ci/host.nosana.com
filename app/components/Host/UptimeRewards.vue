@@ -1,18 +1,5 @@
 <template>
   <div class="mt-5">
-    <div class="is-flex is-align-items-center mb-3">
-      <h4 class="subtitle is-6 mb-0">Uptime Rewards</h4>
-      <span
-        class="has-tooltip-arrow ml-2"
-        data-tooltip="Earn NOS tokens for keeping your node online and available 24/7. These rewards are separate from job execution earnings."
-      >
-        <InfoIcon
-          style="height: 0.8rem; vertical-align: middle"
-          alt="Info"
-        />
-      </span>
-    </div>
-
     <div class="columns mt-4">
       <div class="column is-6">
         <div class="box mb-0">
