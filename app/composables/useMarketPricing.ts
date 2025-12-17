@@ -115,14 +115,24 @@ export function useJobPricing(
     return duration / 3600; // Convert seconds to hours
   });
 
-  // Calculate total job cost
+  // Calculate total job cost (capped at timeout-based maximum)
   const totalCostUsd = computed(() => {
     const hourlyRate = usdPricePerHour.value;
     const hours = durationHours.value;
+    const job = jobData.value;
     
     if (!hourlyRate || hours <= 0) return 0;
     
-    return hourlyRate * hours;
+    const actualCost = hourlyRate * hours;
+    
+    // Cap the cost at the maximum possible cost based on timeout
+    if (job?.timeout && job.timeout > 0) {
+      const timeoutHours = job.timeout / 3600; // Convert timeout seconds to hours
+      const maxCost = hourlyRate * timeoutHours;
+      return Math.min(actualCost, maxCost);
+    }
+    
+    return actualCost;
   });
 
   // Format price for display

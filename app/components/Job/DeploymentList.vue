@@ -1,12 +1,7 @@
 <template>
   <div class="deployment-list-container" ref="containerRef" :style="{ minHeight: dynamicMinHeight }">
   <div class="columns is-mobile is-vcentered mb-4">
-    <div class="column">
-      <h3 class="title is-5 mb-0">
-        {{ title ? title : 'Jobs' }}
-      </h3>
-    </div>
-    <div class="column">
+    <div class="column is-full">
       <div class="is-flex is-justify-content-flex-end is-align-items-center is-flex-wrap-wrap">
         <div v-if="jobs && jobs.length && (!small || (totalJobs && totalJobs > perPage))" class="mr-3 has-text-right">
           <span v-if="totalJobs && totalJobs > perPage">{{ (page - 1) * perPage + 1 }} -
@@ -168,9 +163,13 @@
     </tbody>
   </table>
   </div>
-  <pagination v-if="totalJobs && totalJobs > perPage" v-model="page" class="pagination is-centered mt-4"
-    :total-page="Math.ceil(totalJobs / perPage)" :max-page="6">
-  </pagination>
+  <Pagination
+    v-if="totalJobs && totalJobs > perPage"
+    v-model="page"
+    class="pagination is-centered mt-4"
+    :total-page="Math.ceil(totalJobs / perPage)"
+    :max-page="6"
+  />
   <progress v-if="loadingJobs" class="progress is-small is-info my-0" max="100"></progress>
   </div>
 </template>
@@ -181,6 +180,7 @@ import { UseTimeAgo } from '@vueuse/components';
 import type { PropType } from 'vue';
 import { computed, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
+import Pagination from "~/components/UI/Pagination.vue";
 import JobStatus from "~/components/Job/Status.vue";
 import JobPrice from "~/components/Job/Price.vue";
 import CurrentMarketPrice from "~/components/Market/CurrentPrice.vue";

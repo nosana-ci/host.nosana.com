@@ -148,7 +148,6 @@
 
   <!-- <h3 class="title is-4 mt-5 mb-4">Info</h3> -->
   <div class="box">
-    <h3 class="title is-5 mb-4">Onchain Details</h3>
     <!-- Quick Details Compact Grid -->
     <div class="content mb-5">
       <div class="columns is-multiline is-variable is-0 no-padding is-justify-content-flex-start mb-0">
@@ -158,9 +157,8 @@
           <hr class="my-4">
         </div>
       </div>
-    </div>
-    <h3 class="title is-5 mb-4">Host Details</h3>
-    <div class="content mb-5">
+        </div>
+        <div class="content mb-5">
       <div class="columns is-multiline is-variable is-0 no-padding is-justify-content-flex-start mb-0">
         <HostInfo v-if="nodeAddress" 
           :address="nodeAddress"
@@ -176,9 +174,8 @@
           <hr class="my-4">
         </div>
       </div>
-    </div>
-    <h3 class="title is-5 mb-4">System Details</h3>
-    <div class="content mb-5">
+        </div>
+        <div class="content mb-5">
       <div class="columns is-multiline is-variable is-0 no-padding is-justify-content-flex-start mb-0">
         <HostSpecifications v-if="nodeAddress && combinedSpecs" 
           :specs="combinedSpecs" 

@@ -10,7 +10,7 @@
           <slot />
         </div>
       </div>
-      <site-footer class="mt-auto" />
+      <SiteFooter class="mt-auto" />
     </div>
 
     <!-- Login Modal -->
@@ -28,7 +28,11 @@
 import { useRedirect } from "~/composables/useRedirect";
 import { useLoginModal } from "~/composables/useLoginModal";
 import { useRouter, useRoute } from "vue-router";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore types are provided at project level for this library
+import { useWallet } from "solana-wallets-vue";
 import LoginModal from "~/components/Auth/LoginModal.vue";
+import SiteFooter from "~/components/Layout/SiteFooter.vue";
 
 // Initialize redirect to handle navigation on connect/disconnect
 useRedirect();
@@ -36,14 +40,21 @@ useRedirect();
 // Initialize login modal
 const { modalState, closeModal } = useLoginModal();
 const router = useRouter();
+const { publicKey } = useWallet();
 
 // Handle successful login
 const handleLoginSuccess = () => {
-  // Always redirect to the specified path if provided, otherwise stay on current page
+  // If login was initiated from a host login action, go directly to the host page
+  if (modalState.value.redirectToHost && publicKey.value) {
+    router.push(`/${publicKey.value.toString()}`);
+    return;
+  }
+
+  // Otherwise, redirect to the specified path if provided
   if (modalState.value.redirectPath) {
     router.push(modalState.value.redirectPath);
   }
-  // If no redirect path specified, stay on the current page (do nothing)
+  // If no redirect path specified, stay on the current page
 };
 
 </script>

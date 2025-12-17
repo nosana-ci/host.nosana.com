@@ -3,8 +3,8 @@
     <div class="login-modal" @click.stop>
       <!-- Header with Logo -->
       <div class="login-header">
-        <logo width="120px" :animated="true" class="light-only" />
-        <logo width="120px" :white="true" class="dark-only" :animated="true" />
+        <Logo width="120px" :animated="true" class="light-only" />
+        <Logo width="120px" :white="true" class="dark-only" :animated="true" />
       </div>
 
       <!-- Main Login Content -->
@@ -63,6 +63,7 @@ import { useWallet } from 'solana-wallets-vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import WalletIcon from '~/components/UI/WalletIcon.vue';
+import Logo from '~/components/UI/Logo.vue';
 
 interface LoginModalProps {
   isOpen: boolean;

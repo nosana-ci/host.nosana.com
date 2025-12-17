@@ -6,20 +6,26 @@ interface LoginModalState {
   isOpen: boolean;
   mode: LoginMode;
   redirectPath?: string;
+  redirectToHost?: boolean;
 }
 
 const modalState = ref<LoginModalState>({
   isOpen: false,
   mode: 'wallet',
-  redirectPath: undefined
+  redirectPath: undefined,
+  redirectToHost: false
 });
 
 export function useLoginModal() {
-  const openModal = (mode: LoginMode = 'wallet', redirectPath?: string) => {
+  const openModal = (
+    mode: LoginMode = 'wallet',
+    options?: { redirectPath?: string; redirectToHost?: boolean }
+  ) => {
     modalState.value = {
       isOpen: true,
       mode,
-      redirectPath: redirectPath
+      redirectPath: options?.redirectPath,
+      redirectToHost: options?.redirectToHost ?? false
     };
   };
 
@@ -27,8 +33,8 @@ export function useLoginModal() {
     modalState.value.isOpen = false;
   };
 
-  const openWalletModal = (redirectPath?: string) => {
-    openModal('wallet', redirectPath);
+  const openWalletModal = (options?: { redirectPath?: string; redirectToHost?: boolean }) => {
+    openModal('wallet', options);
   };
 
   return {

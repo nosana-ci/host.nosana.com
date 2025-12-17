@@ -1,7 +1,6 @@
-<template>
-  <div class="box">
-    <h3 class="title is-5 mb-4">{{ title }}</h3>
-    <div class="filters mb-4">
+    <template>
+      <div class="box">
+        <div class="filters mb-4">
       <div class="field">
         <label class="label">Metric</label>
         <div class="control">
@@ -28,8 +27,11 @@
       <div v-else-if="error" class="notification is-warning">
         {{ error }}
       </div>
-      <div v-else-if="!templateData || templateData.templates.length === 0" class="notification is-info">
-        No benchmark data available for this node.
+      <div
+        v-else-if="!templateData || templateData.templates.length === 0"
+        class="notification"
+      >
+        No benchmark data available for this host
       </div>
       <Bar
         v-else
