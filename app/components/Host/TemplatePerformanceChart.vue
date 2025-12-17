@@ -27,8 +27,11 @@
       <div v-else-if="error" class="notification is-warning">
         {{ error }}
       </div>
-      <div v-else-if="!templateData || templateData.templates.length === 0" class="notification is-info">
-        No benchmark data available for this node.
+      <div
+        v-else-if="!templateData || templateData.templates.length === 0"
+        class="notification"
+      >
+        No benchmark data available for this host
       </div>
       <Bar
         v-else

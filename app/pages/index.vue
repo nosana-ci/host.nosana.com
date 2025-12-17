@@ -18,21 +18,23 @@
               <li><strong>GPU</strong>: Recent NVIDIA RTX / A-series (see full list)</li>
               <li><strong>OS</strong>: Ubuntu 20.04+ (native, Windows / WSL2 deprecated)</li>
             </ul>
-            <NuxtLink
-              to="https://docs.nosana.com/hosts/grid.html"
-              class="is-size-7 has-text-link"
-              external
-              target="_blank"
-            >
-              View full hardware requirements
-            </NuxtLink>
+            <div class="links-grid">
+              <NuxtLink
+                to="https://docs.nosana.com/hosts/grid.html"
+                class="is-size-7 has-text-link"
+                external
+                target="_blank"
+              >
+                View full hardware requirements
+              </NuxtLink>
+            </div>
           </div>
         </div>
 
         <div class="column is-12-tablet is-6-desktop">
           <div class="box equal-height-box">
             <h3 class="title is-5 mb-3">Setup overview</h3>
-            <ol class="steps-list">
+            <ul class="steps-list">
               <li>
                 Install Docker and configure it for non-root usage.
               </li>
@@ -46,7 +48,7 @@
               <li>
                 Register your node and <strong>back up</strong> <code>~/.nosana/nosana_key.json</code>.
               </li>
-            </ol>
+            </ul>
             <div class="links-grid">
               <NuxtLink
                 to="https://docs.nosana.com/hosts/grid-ubuntu.html"
@@ -104,7 +106,7 @@ const onExistingHostClick = () => {
     router.push(`/${publicKey.value.toString()}`);
     return;
   }
-  openWalletModal("/");
+  openWalletModal({ redirectToHost: true });
 };
 
 const onSearchSubmit = () => {
@@ -125,7 +127,7 @@ const onSearchSubmit = () => {
 
 .requirements-list,
 .steps-list {
-  margin-left: 1rem;
+  margin-left: 0;
 }
 
 .requirements-list li,
@@ -145,7 +147,7 @@ pre {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  margin-top: 0.75rem;
+  margin-top: auto;
 }
 
 .equal-height-box {

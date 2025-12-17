@@ -59,6 +59,16 @@
           <path v-else d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" fill="currentColor"/>
         </svg>
       </button>
+
+      <!-- Home Button (host page only) -->
+      <button
+        v-if="$route.params.id"
+        class="home-button"
+        @click="goHome"
+        title="Back to landing page"
+      >
+        <HomeIcon class="home-icon" />
+      </button>
       
       <!-- Login Button -->
       <button 
@@ -105,12 +115,14 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { WalletMultiButton } from "solana-wallets-vue";
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore types are provided at project level for this library
+import { WalletMultiButton, useWallet } from "solana-wallets-vue";
 import SettingsIcon from '@/assets/img/icons/settings.svg?component';
 import LogoutIcon from '@/assets/img/icons/logout.svg?component';
+import HomeIcon from '@/assets/img/icons/home.svg?component';
 import { useRouter } from 'vue-router';
-import { useWallet } from 'solana-wallets-vue';
 import { useLoginModal } from '~/composables/useLoginModal';
 import { useSDK } from '~/composables/useSDK';
 import { useAPI } from '~/composables/useAPI';
@@ -138,7 +150,11 @@ const openPriorityFeeSettings = () => {
 
 
 const openLoginModal = () => {
-  openWalletModal();
+  openWalletModal({ redirectToHost: true });
+};
+
+const goHome = () => {
+  router.push('/');
 };
 
 // Toggle dark mode
@@ -352,7 +368,8 @@ defineExpose({
 }
 
 .theme-toggle-button,
-.login-button {
+.login-button,
+.home-button {
   background: $box-background-color;
   border: none;
   cursor: pointer;
