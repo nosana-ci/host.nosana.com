@@ -17,6 +17,9 @@
               <div v-else-if="statusType === 'QUEUED'" style="width: fit-content" class="is-flex">
                 <JobStatus :status="'QUEUED'" />
               </div>
+              <div v-else-if="statusType === 'OFFLINE'" style="width: fit-content" class="is-flex">
+                <JobStatus :status="'OFFLINE'" />
+              </div>
               <span v-else>{{ f.value ?? '-' }}</span>
             </template>
             <template v-else-if="f.key === 'runningJob' && f.value">
@@ -54,6 +57,9 @@
               <div v-else-if="statusType === 'QUEUED'" style="width: fit-content" class="is-flex">
                 <JobStatus :status="'QUEUED'" />
               </div>
+              <div v-else-if="statusType === 'OFFLINE'" style="width: fit-content" class="is-flex">
+                <JobStatus :status="'OFFLINE'" />
+              </div>
               <span v-else>{{ f.value ?? '-' }}</span>
             </template>
             <template v-else-if="f.key === 'runningJob' && f.value">
@@ -78,7 +84,7 @@
 
 <script setup lang="ts">
 import JobStatus from "~/components/Job/Status.vue"
-import { type Market } from "@nosana/sdk"
+import { useMarkets } from "~/composables/useMarkets"
 
 const props = defineProps<{
   nodeAddress: string
@@ -137,6 +143,7 @@ const statusType = computed(() => {
   if (!isNode.value) return null
   if (queueInfo.value) return 'QUEUED'
   if (runningJobAddress.value) return 'RUNNING'
+  if (!props.nodeInfo?.info) return 'OFFLINE'
   return null
 })
 
@@ -145,6 +152,7 @@ const statusText = computed(() => {
   if (!isNode.value) return 'Not a node'
   if (statusType.value === 'RUNNING') return 'Running'
   if (statusType.value === 'QUEUED') return 'Queued'
+  if (statusType.value === 'OFFLINE') return 'Offline'
   if (props.nodeInfo?.info) return '(Re)starting'
   return 'Offline'
 })
