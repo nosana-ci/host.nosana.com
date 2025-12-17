@@ -820,20 +820,14 @@ const chartOptions = computed(() => {
   };
 });
 
-// Job list data - moved from HostInfo
+// Job list data - moved from HostInfo (simplified to always fetch when nodeAddress exists)
 const jobPage = ref(1);
 const jobState = ref<number | null>(null);
-const jobStateMapping = {
-  0: "QUEUED",
-  1: "RUNNING",
-  2: "COMPLETED",
-  3: "STOPPED",
-};
+const jobStateMapping = { 0: "QUEUED", 1: "RUNNING", 2: "COMPLETED", 3: "STOPPED" };
 const jobLimit = ref(10);
 
 const jobsUrl = computed(() => {
-  if (!nodeAddress.value) return null;
-  
+  if (!nodeAddress.value) return '';
   return `/api/jobs?limit=${jobLimit.value}&offset=${
     (jobPage.value - 1) * jobLimit.value
   }${jobState.value !== null ? `&state=${jobStateMapping[jobState.value as keyof typeof jobStateMapping]}` : ""}${
@@ -841,20 +835,11 @@ const jobsUrl = computed(() => {
   }`;
 });
 
-const initialJobsLoadInitiated = ref(false);
-const { data: jobs, pending: loadingJobs, refresh: refreshJobs, error: jobsError } = useAPI(
-  () => {
-    const url = jobsUrl.value;
-    if (!url) {
-      return '';
-    }
-    initialJobsLoadInitiated.value = true;
-    return url;
-  },
+const { data: jobs, pending: loadingJobs } = useAPI(
+  jobsUrl,
   { 
     watch: [jobsUrl], 
-    default: () => ({ totalJobs: 0, jobs: [] }),
-    immediate: false
+    default: () => ({ totalJobs: 0, jobs: [] })
   }
 );
 
@@ -896,7 +881,7 @@ interface NodeRanking {
   uptimePercentage: number;
 }
 const nodeRankingUrl = computed(() => {
-  if (!nodeAddress.value || !nodeSpecs.value?.marketAddress) return '';
+  if (!nodeAddress.value) return '';
   return `/api/benchmarks/node-report?node=${nodeAddress.value}`;
 });
 const { data: nodeRanking, pending: loadingNodeRanking } = useAPI(
@@ -1015,15 +1000,6 @@ watch([isOwner, selectedPeriod], ([owner, newPeriod]) => {
   }
 }, { immediate: true });
 
-// Watch nodeAddress to trigger jobs fetch
-watch(nodeAddress, (newAddress) => {
-  if (newAddress && !initialJobsLoadInitiated.value) {
-    nextTick(() => {
-      refreshJobs();
-    });
-  }
-}, { immediate: true });
-
 // Modify the onMounted to check the flag
 onMounted(() => {
   checkBalances();
@@ -1036,12 +1012,6 @@ onMounted(() => {
     }
   `;
   document.head.appendChild(style);
-
-  if (nodeAddress.value && !initialJobsLoadInitiated.value) {
-    nextTick(() => {
-      refreshJobs();
-    });
-  }
 });
 </script>
 <style scoped>
