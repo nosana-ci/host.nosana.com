@@ -148,46 +148,25 @@
 
   <!-- <h3 class="title is-4 mt-5 mb-4">Info</h3> -->
   <div class="box">
-    <!-- Quick Details Compact Grid -->
-    <div class="content mb-5">
-      <div class="columns is-multiline is-variable is-0 no-padding is-justify-content-flex-start mb-0">
-        <GeneralInfo v-if="nodeAddress" :address="nodeAddress" />
-
-        <div class="column is-full">
-          <hr class="my-4">
-        </div>
-      </div>
-        </div>
-        <div class="content mb-5">
-      <div class="columns is-multiline is-variable is-0 no-padding is-justify-content-flex-start mb-0">
-        <HostInfo v-if="nodeAddress" 
-          :address="nodeAddress"
-          :node-specs="nodeSpecs"
-          :node-info="nodeInfo"
-          :node-ranking="nodeRanking"
-          :loading-node-specs="loadingNodeSpecs" 
-          :loading-node-info="loadingNodeInfo"
-          :loading-node-ranking="loadingNodeRanking"
-        />
-
-        <div class="column is-full">
-          <hr class="my-4">
-        </div>
-      </div>
-        </div>
-        <div class="content mb-5">
-      <div class="columns is-multiline is-variable is-0 no-padding is-justify-content-flex-start mb-0">
-        <HostSpecifications v-if="nodeAddress && combinedSpecs" 
-          :specs="combinedSpecs" 
-          :node-ranking="nodeRanking"
-        />
-        <div v-else-if="nodeAddress && (loadingNodeSpecs || loadingNodeInfo )" class="column is-full">
-          <p>Loading system details...</p>
-        </div>
-        <div v-else-if="nodeAddress" class="column is-full">
-          <p>System details are not available for this host.</p>
-        </div>
-      </div>
+    <HostQuickDetails
+      v-if="nodeAddress && combinedSpecs"
+      :node-address="nodeAddress"
+      :combined-specs="combinedSpecs"
+      :node-ranking="nodeRanking"
+      :jobs="jobs"
+      :loading-jobs="loadingJobs"
+      :node-info="nodeInfo"
+      :loading-node-info="loadingNodeInfo"
+      :nos-balance="balance"
+      :nos-staked="nosStaked"
+      :sol-balance="solBalance"
+      :loading-balances="loading"
+    />
+    <div v-else-if="nodeAddress && (loadingNodeSpecs || loadingNodeInfo )" class="column is-full">
+      <p>Loading system details...</p>
+    </div>
+    <div v-else-if="nodeAddress" class="column is-full">
+      <p>System details are not available for this host.</p>
     </div>
   </div>
   
@@ -222,7 +201,6 @@ import InfoIcon from '@/assets/img/icons/info.svg?component';
 import { computed, ref, onMounted, watch, nextTick } from 'vue';
 import { Bar } from 'vue-chartjs';
 import LayoutTopBar from "~/components/Layout/TopBar.vue";
-import GeneralInfo from "~/components/Host/GeneralInfo.vue";
 import {
   Chart as ChartJS,
   Title,
@@ -234,12 +212,11 @@ import {
 } from 'chart.js';
 import ArrowUpIcon from '@/assets/img/icons/arrow-up.svg?component';
 import ArrowDownIcon from '@/assets/img/icons/arrow-down.svg?component';
-import HostInfo from "~/components/Host/HostInfo.vue";
 import DeploymentList from '~/components/Job/DeploymentList.vue';
 import TemplatePerformanceChart from "~/components/Host/TemplatePerformanceChart.vue";
 import UptimeChart from "~/components/Host/UptimeChart.vue";
 import UptimeRewards from "~/components/Host/UptimeRewards.vue";
-import HostSpecifications from "~/components/Host/HostSpecifications.vue";
+import HostQuickDetails from "~/components/Host/HostQuickDetails.vue";
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
@@ -274,6 +251,7 @@ const isOwner = computed(() => {
 // Get balances
 const balance = ref<any | null>(null);
 const nosStaked = ref<any | null>(null);
+const solBalance = ref<number | null>(null);
 const loading = ref(false);
 
 // Get NOS price
@@ -288,6 +266,13 @@ const checkBalances = async () => {
       balance.value = await nosana.value.solana.getNosBalance(
         activeAddress.value
       );
+      try {
+        solBalance.value = await nosana.value.solana.getSolBalance(
+          activeAddress.value
+        );
+      } catch (error) {
+        solBalance.value = null;
+      }
       try {
         nosStaked.value = await nosana.value.stake.get(
           activeAddress.value
