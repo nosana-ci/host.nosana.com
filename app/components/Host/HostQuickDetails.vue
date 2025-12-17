@@ -192,7 +192,6 @@ const allFields = computed(() => [
   { key: 'gpu',           label: 'GPU',            value: gpuName.value },
   { key: 'nvidiaDriver',  label: 'NVIDIA Driver',  value: props.combinedSpecs?.nvmlVersion || null },
   { key: 'cudaVersion',   label: 'CUDA Version',    value: props.combinedSpecs?.cudaVersion || null },
-  { key: 'diskSpace',     label: 'Disk Space',     value: diskSpace.value },
   { key: 'country',       label: 'Country',        value: country.value },
   { key: 'systemEnv',     label: 'System Environment', value: systemEnv.value },
 
@@ -200,12 +199,13 @@ const allFields = computed(() => [
   { key: 'availability',  label: 'Availability',    value: availability.value },
   { key: 'antiSpoof',     label: 'Anti-spoof %',   value: antiSpoof.value },
   { key: 'cpu',           label: 'CPU',            value: cpu.value },
+  { key: 'diskSpace',     label: 'Disk Space',     value: diskSpace.value },
   { key: 'ram',           label: 'RAM',            value: ram.value },
   { key: 'download',      label: 'Download Speed', value: download.value },
   { key: 'upload',        label: 'Upload Speed',   value: upload.value },
 ])
 
-const importantKeys = new Set(['hostApiStatus','availability','antiSpoof','cpu','ram','download','upload'])
+const importantKeys = new Set(['hostApiStatus','availability','antiSpoof','cpu','ram','diskSpace','download','upload'])
 
 const importantFields = computed(() => allFields.value.filter(f => importantKeys.has(f.key)))
 const otherFields     = computed(() => allFields.value.filter(f => !importantKeys.has(f.key)))
