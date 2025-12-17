@@ -163,9 +163,13 @@
     </tbody>
   </table>
   </div>
-  <pagination v-if="totalJobs && totalJobs > perPage" v-model="page" class="pagination is-centered mt-4"
-    :total-page="Math.ceil(totalJobs / perPage)" :max-page="6">
-  </pagination>
+  <Pagination
+    v-if="totalJobs && totalJobs > perPage"
+    v-model="page"
+    class="pagination is-centered mt-4"
+    :total-page="Math.ceil(totalJobs / perPage)"
+    :max-page="6"
+  />
   <progress v-if="loadingJobs" class="progress is-small is-info my-0" max="100"></progress>
   </div>
 </template>
@@ -176,6 +180,7 @@ import { UseTimeAgo } from '@vueuse/components';
 import type { PropType } from 'vue';
 import { computed, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
+import Pagination from "~/components/UI/Pagination.vue";
 import JobStatus from "~/components/Job/Status.vue";
 import JobPrice from "~/components/Job/Price.vue";
 import CurrentMarketPrice from "~/components/Market/CurrentPrice.vue";
