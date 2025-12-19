@@ -1,5 +1,5 @@
 <template>
-  <LayoutTopBar :title="'Host'" :subtitle="'Host Details and Performance'">
+  <LayoutTopBar :title="'Host'">
   </LayoutTopBar>
 
   <!-- Earnings Section - Only show if connected wallet matches node -->
@@ -32,16 +32,7 @@
         <div class="column is-12">
           <div class="box has-text-centered">
             <p class="heading">Forecasted Monthly
-              <span
-                class="has-tooltip-arrow"
-                data-tooltip="This is a forecast of what your earnings will be for the rest of the month based on your earnings this month so far."
-                style="font-weight: normal; text-transform: none; letter-spacing: normal;"
-              >
-              <InfoIcon
-                style="height: 0.8rem; vertical-align: top;"
-                alt="Info"
-              />
-            </span>
+
 
             </p>
             <p class="title is-4 mb-1" v-if="!loadingHistory" style="height: 100%;">

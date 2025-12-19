@@ -58,7 +58,9 @@
       <span class="quick-detail-value">
         <a
           v-if="nodeRuns && nodeRuns.length > 0"
-          :href="`/explorer/job/${nodeRuns[0].account.job}`"
+          :href="`https://explorer.nosana.com/jobs/${nodeRuns[0].account.job}`"
+          target="_blank"
+          rel="noopener noreferrer"
           class="address is-family-monospace"
         >{{ nodeRuns[0].account.job }}</a>
         <span v-else-if="loadingRuns">...</span>
@@ -67,14 +69,16 @@
     </div>
   </div>
 
-  <!-- Host market -->
+  <!-- GPU pool -->
   <div class="column is-one-fifth is-full-mobile no-padding" style="min-width: 220px; margin-bottom: 0.75rem;">
     <div class="quick-detail-item">
-      <span class="quick-detail-label">Host market</span>
+      <span class="quick-detail-label">GPU pool</span>
       <span class="quick-detail-value">
         <span v-if="queueInfo">
           <a
-            :href="`/explorer/market/${queueInfo.market.address.toString()}`"
+            :href="`https://explorer.nosana.com/markets/${queueInfo.market.address.toString()}`"
+            target="_blank"
+            rel="noopener noreferrer"
             class="address is-family-monospace"
           >
             <span
@@ -100,7 +104,9 @@
           <span v-if="nodeSpecs">
             <template v-if="nodeSpecs.marketAddress">
               <a
-                :href="`/explorer/market/${nodeSpecs.marketAddress}`"
+                :href="`https://explorer.nosana.com/markets/${nodeSpecs.marketAddress}`"
+                target="_blank"
+                rel="noopener noreferrer"
                 class="address is-family-monospace"
               >
                 <span

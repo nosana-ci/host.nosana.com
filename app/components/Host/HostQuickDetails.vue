@@ -23,13 +23,16 @@
               <span v-else>{{ f.value ?? '-' }}</span>
             </template>
             <template v-else-if="f.key === 'runningJob' && f.value">
-              <a :href="`/explorer/job/${f.value}`" class="address is-family-monospace">
+              <a :href="`https://explorer.nosana.com/jobs/${f.value}`" target="_blank" rel="noopener noreferrer" class="address is-family-monospace">
                 {{ f.value }}
               </a>
             </template>
             <template v-else-if="f.key === 'hostMarket' && f.value">
-              <a :href="`/explorer/market/${f.value}`" class="address is-family-monospace">
-                {{ f.value }}
+              <a :href="`https://explorer.nosana.com/markets/${f.value}`" target="_blank" rel="noopener noreferrer" class="address" :class="{ 'is-family-monospace': !testgridMarkets?.find((tgm: any) => tgm.address === f.value) }">
+                <span v-if="testgridMarkets?.find((tgm: any) => tgm.address === f.value)">
+                  {{ testgridMarkets.find((tgm: any) => tgm.address === f.value).name }}
+                </span>
+                <span v-else>{{ f.value }}</span>
               </a>
             </template>
             <template v-else>
@@ -63,13 +66,16 @@
               <span v-else>{{ f.value ?? '-' }}</span>
             </template>
             <template v-else-if="f.key === 'runningJob' && f.value">
-              <a :href="`/explorer/job/${f.value}`" class="address is-family-monospace">
+              <a :href="`https://explorer.nosana.com/jobs/${f.value}`" target="_blank" rel="noopener noreferrer" class="address is-family-monospace">
                 {{ f.value }}
               </a>
             </template>
             <template v-else-if="f.key === 'hostMarket' && f.value">
-              <a :href="`/explorer/market/${f.value}`" class="address is-family-monospace">
-                {{ f.value }}
+              <a :href="`https://explorer.nosana.com/markets/${f.value}`" target="_blank" rel="noopener noreferrer" class="address" :class="{ 'is-family-monospace': !testgridMarkets?.find((tgm: any) => tgm.address === f.value) }">
+                <span v-if="testgridMarkets?.find((tgm: any) => tgm.address === f.value)">
+                  {{ testgridMarkets.find((tgm: any) => tgm.address === f.value).name }}
+                </span>
+                <span v-else>{{ f.value }}</span>
               </a>
             </template>
             <template v-else>
@@ -85,6 +91,7 @@
 <script setup lang="ts">
 import JobStatus from "~/components/Job/Status.vue"
 import { useMarkets } from "~/composables/useMarkets"
+import { useAPI } from "~/composables/useAPI"
 
 const props = defineProps<{
   nodeAddress: string
@@ -121,6 +128,9 @@ const { markets, getMarkets } = useMarkets()
 if (!markets.value) {
   getMarkets()
 }
+
+// Fetch markets data for market names
+const { data: testgridMarkets } = useAPI('/api/markets', { default: () => [] })
 
 const queueInfo = computed(() => {
   let position = -1
@@ -186,7 +196,7 @@ const allFields = computed(() => [
   { key: 'nosStaked',     label: 'NOS Staked',     value: props.loadingBalances ? '...' : formatStaked(props.nosStaked) },
   { key: 'solBalance',    label: 'SOL Balance',    value: props.loadingBalances ? '...' : formatSol(props.solBalance) },
   { key: 'runningJob',    label: 'Running job',    value: runningJobAddress.value },
-  { key: 'hostMarket',    label: 'Host market',    value: props.combinedSpecs?.marketAddress || null },
+  { key: 'hostMarket',    label: 'GPU pool',    value: props.combinedSpecs?.marketAddress || null },
   { key: 'totalJobs',     label: 'Total Jobs',     value: totalJobs.value },
   { key: 'cliVersion',    label: 'CLI Version',    value: cliVersion.value },
   { key: 'gpu',           label: 'GPU',            value: gpuName.value },
