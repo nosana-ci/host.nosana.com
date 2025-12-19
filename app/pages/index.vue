@@ -1,10 +1,17 @@
 <template>
-  <div>
-    <LayoutTopBar
-      :title="'Host'"/>
+  <div class="landing-page-container">
+    <!-- Background World Map -->
+    <div class="map-background">
+      <WorldMap />
+    </div>
 
-    <!-- Getting Started -->
-    <section class="first-section">
+    <!-- Content Overlay -->
+    <div class="content-overlay">
+      <LayoutTopBar
+        :title="'Host'"/>
+
+      <!-- Getting Started -->
+      <section class="first-section">
       <div class="columns is-multiline">
         <div class="column is-12-tablet is-6-desktop">
           <div class="box equal-height-box">
@@ -30,7 +37,7 @@
         </div>
 
         <div class="column is-12-tablet is-6-desktop">
-          <div class="box equal-height-box">
+          <div class="box equal-height-box setup-overview-box">
             <h3 class="title is-5 mb-3">Setup overview</h3>
             <ul class="steps-list">
               <li>
@@ -57,47 +64,30 @@
                 Setup guide
               </NuxtLink>
             </div>
+            <div class="login-button-container">
+              <button class="button is-primary" @click="onExistingHostClick">
+                Already a host? Log in
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </section>
-
-    <!-- Existing host teaser -->
-    <section class="second-section">
-      <div class="box">
-        <h2 class="title is-4 mb-3">Already running a host?</h2>
-        <form class="field mb-4" @submit.prevent="onSearchSubmit">
-          <div class="control">
-            <input
-              v-model="searchAddress"
-              class="input"
-              type="text"
-              placeholder="Enter your host address and press Enter"
-            />
-          </div>
-        </form>
-        <button class="button is-primary" @click="onExistingHostClick">
-          Already a host? Log in
-        </button>
-      </div>
-    </section>
-
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore types are provided at project level for this library
 import { useWallet } from "solana-wallets-vue";
 import { useLoginModal } from "~/composables/useLoginModal";
 import LayoutTopBar from "~/components/Layout/TopBar.vue";
+import WorldMap from "~/components/WorldMap.vue";
 
 const router = useRouter();
 const { connected, publicKey } = useWallet();
 const { openWalletModal } = useLoginModal();
-
-const searchAddress = ref("");
 
 const onExistingHostClick = () => {
   if (connected.value && publicKey.value) {
@@ -106,15 +96,58 @@ const onExistingHostClick = () => {
   }
   openWalletModal({ redirectToHost: true });
 };
-
-const onSearchSubmit = () => {
-  const trimmed = searchAddress.value.trim();
-  if (!trimmed) return;
-  router.push(`/${trimmed}`);
-};
 </script>
 
 <style scoped lang="scss">
+.landing-page-container {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.map-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 0;
+  opacity: 0.7;
+  
+  :deep(.box) {
+    height: 100%;
+    background: transparent !important;
+  }
+  
+  :deep(.world-map-container) {
+    height: 100%;
+  }
+}
+
+.content-overlay {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+  
+  // Make all interactive elements clickable
+  > * {
+    pointer-events: auto;
+  }
+  
+  // Ensure nested interactive elements work
+  :deep(a),
+  :deep(button),
+  :deep(input),
+  :deep(form),
+  :deep(.box),
+  :deep(.button),
+  :deep(.input),
+  :deep(.field),
+  :deep(.control) {
+    pointer-events: auto;
+  }
+}
+
 .hero-section {
   padding: 2rem 0 1rem;
 }
@@ -154,11 +187,18 @@ pre {
   flex-direction: column;
 }
 
-.first-section {
-  margin-top: 2rem;
+.setup-overview-box {
+  position: relative;
 }
 
-.second-section {
+.login-button-container {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  margin-top: auto;
+}
+
+.first-section {
   margin-top: 2rem;
 }
 </style>
