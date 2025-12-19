@@ -1,17 +1,18 @@
 <template>
   <div id="app">
-    <div
-      id="content"
-      class="is-flex is-flex-direction-column"
-      style="min-height: 100vh; max-width: 1400px; margin: 0 auto; padding: 2rem;"
-    >
-      <div class="section">
-        <div>
-          <slot />
+    <section class="columns ml-0 mr-0 mt-0 mb-0">
+      <div
+        id="content"
+        class="column ultrawide-centered"
+      >
+        <div class="section">
+          <div>
+            <slot />
+          </div>
         </div>
+        <SiteFooter class="mt-auto" />
       </div>
-      <SiteFooter class="mt-auto" />
-    </div>
+    </section>
 
     <!-- Login Modal -->
     <LoginModal
@@ -62,6 +63,18 @@ const handleLoginSuccess = () => {
 <style lang="scss" scoped>
 #content {
   min-height: 100vh;
+  max-width: 1600px;
   min-width: 0;
+}
+
+.ultrawide-centered {
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  @media screen and (max-width: $tablet) {
+    padding-left: 0;
+    padding-right: 0;
+  }
 }
 </style>

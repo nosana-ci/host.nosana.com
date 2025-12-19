@@ -1,11 +1,146 @@
 <template>
-  <div class="is-flex is-justify-content-space-between mb-5 is-flex-wrap-wrap">
-    <div>
-      <h2 class="title">{{ title }}</h2>
-      <h3 v-if="subtitle" class="subtitle mb-2">
-        {{ subtitle }}
-      </h3>
+  <div class="is-flex is-justify-content-space-between is-align-items-center mb-5 is-flex-wrap-wrap">
+    <div class="is-flex is-flex-direction-row is-align-items-center">
+      <nuxt-link to="/" class="navbar-logo">
+        <Logo width="160px" :animated="true" class="light-only" />
+        <Logo width="160px" :white="true" :animated="true" class="dark-only" />
+      </nuxt-link>
+      <div class="vertical-divider mx-4"></div>
+      <h2 class="title is-3">{{ title }}</h2>
     </div>
+    
+    <!-- Center: Navigation Tabs -->
+    <div class="is-flex is-flex-direction-row is-align-items-center is-hidden-mobile">
+      <nuxt-link 
+        v-if="connected && publicKey"
+        to="/" 
+        class="navbar-tab"
+        :class="{ 'is-active': $route.path === '/' }"
+      >
+        Home
+      </nuxt-link>
+      <nuxt-link 
+        v-if="connected && publicKey"
+        :to="`/${publicKey.toString()}`"
+        class="navbar-tab"
+        :class="{ 'is-active': $route.path.startsWith('/') && $route.params.id }"
+      >
+        Host
+      </nuxt-link>
+    </div>
+
+    <!-- Right: Actions -->
+    <div class="is-flex is-flex-direction-row is-align-items-center profile-section">
+        <!-- Status Link -->
+        <a 
+          href="https://nosana.statuspage.io" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          class="navbar-tab is-hidden-mobile"
+        >
+          <div class="status-dot"></div>
+          <span>Status</span>
+        </a>
+      <!-- Dark Mode Toggle -->
+      <button 
+        class="navbar-tab mr-4 is-hidden-mobile"
+        @click="toggleDarkMode"
+        :title="$colorMode.value === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+      >
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+          <path v-if="$colorMode.value === 'dark'" fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" fill="currentColor"/>
+          <path v-else d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" fill="currentColor"/>
+        </svg>
+      </button>
+      <div v-if="!connected && !hideButtons">
+        <button 
+          class="navbar-tab"
+          @click="openLoginModal"
+        >
+          Connect wallet
+        </button>
+      </div>
+      <div
+        v-if="connected && !hideButtons"
+        class="profile-dropdown"
+        :class="{ 'sticky-profile': $route.path === '/deploy' }"
+      >
+        <div class="profile-button" @click="toggleUserProfileDropdown">
+          <!-- Wallet User -->
+          <template v-if="connected && wallet">
+            <div class="profile-avatar wallet-avatar">
+              <img v-if="wallet.adapter.icon" :src="wallet.adapter.icon" :alt="wallet.adapter.name + ' icon'" class="wallet-icon" />
+              <span v-else>W</span>
+            </div>
+            <div class="profile-info">
+              <span class="profile-name">{{ getWalletAddress() }}</span>
+              <span class="profile-balance">${{ getNosBalanceUSD().toFixed(2) }}</span>
+            </div>
+          </template>
+          <svg class="dropdown-arrow" :class="{ 'is-flipped': showUserProfileDropdown }" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M7.5 3L4.5 6L7.5 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+
+        <div v-if="showUserProfileDropdown" class="dropdown-menu-simple">
+          <!-- Priority Fee Settings -->
+          <button class="dropdown-item-simple" @click.stop="openPriorityFeeSettings">
+            <SettingsIcon class="dropdown-icon" />
+            Priority Fee Settings
+          </button>
+          <hr class="dropdown-divider">
+          <button class="dropdown-item-simple logout-item" @click.stop="logout">
+            <LogoutIcon class="dropdown-icon" />
+            Log out
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Menu Toggle -->
+      <button 
+        class="mobile-menu-toggle is-hidden-tablet"
+        @click="showMobileMenu = !showMobileMenu"
+        :class="{ 'is-active': showMobileMenu }"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu is-hidden-tablet" :class="{ 'is-active': showMobileMenu }">
+        <nuxt-link 
+          v-if="connected && publicKey"
+          to="/" 
+          class="mobile-menu-item"
+          :class="{ 'is-active': $route.path === '/' }"
+          @click="showMobileMenu = false"
+        >
+          Home
+        </nuxt-link>
+        <nuxt-link 
+          v-if="connected && publicKey"
+          :to="`/${publicKey.toString()}`"
+          class="mobile-menu-item"
+          :class="{ 'is-active': $route.path.startsWith('/') && $route.params.id }"
+          @click="showMobileMenu = false"
+        >
+          Host
+        </nuxt-link>
+        <a 
+          href="https://nosana.statuspage.io" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          class="mobile-menu-item"
+          @click="showMobileMenu = false"
+        >
+          <div class="status-dot"></div>
+          Status
+        </a>
+    </div>
+
+    <!-- Settings Modal -->
     <div class="modal" :class="{ 'is-active': modelValue }">
       <div class="modal-background" @click="updateShowSettingsModal(false)"></div>
       <div class="modal-content">
@@ -46,72 +181,6 @@
       </div>
       <button class="modal-close is-large" @click="updateShowSettingsModal(false)" aria-label="close"></button>
     </div>
-    <!-- Theme Toggle & Login/Profile Section -->
-    <div class="topbar-right-actions" v-if="!hideButtons">
-      <!-- Dark Mode Toggle -->
-      <button 
-        class="theme-toggle-button"
-        @click="toggleDarkMode"
-        :title="$colorMode.value === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
-      >
-        <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-          <path v-if="$colorMode.value === 'dark'" fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" fill="currentColor"/>
-          <path v-else d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" fill="currentColor"/>
-        </svg>
-      </button>
-
-      <!-- Home Button (host page only) -->
-      <button
-        v-if="$route.params.id"
-        class="home-button"
-        @click="goHome"
-        title="Back to landing page"
-      >
-        <HomeIcon class="home-icon" />
-      </button>
-      
-      <!-- Login Button -->
-      <button 
-        v-if="!connected" 
-        class="login-button"
-        @click="openLoginModal"
-      >
-        Login
-      </button>
-      
-      <!-- Profile Dropdown -->
-      <div v-else-if="connected" class="profile-dropdown" :class="{ 'sticky-profile': $route.path === '/deploy' }">
-        <div class="profile-button" @click="toggleUserProfileDropdown">
-        <!-- Wallet User -->
-        <template v-if="connected && wallet">
-          <div class="profile-avatar wallet-avatar">
-            <img v-if="wallet.adapter.icon" :src="wallet.adapter.icon" :alt="wallet.adapter.name + ' icon'" class="wallet-icon" />
-            <span v-else>W</span>
-          </div>
-          <div class="profile-info">
-            <span class="profile-name">{{ getWalletAddress() }}</span>
-            <span class="profile-balance">${{ getNosBalanceUSD().toFixed(2) }}</span>
-          </div>
-        </template>
-        <svg class="dropdown-arrow" :class="{ 'is-flipped': showUserProfileDropdown }" width="12" height="12" viewBox="0 0 12 12" fill="none">
-          <path d="M7.5 3L4.5 6L7.5 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      
-      <div v-if="showUserProfileDropdown" class="dropdown-menu-simple">
-        <!-- Priority Fee Settings -->
-        <button class="dropdown-item-simple" @click.stop="openPriorityFeeSettings">
-          <SettingsIcon class="dropdown-icon" />
-          Priority Fee Settings
-        </button>
-        <hr class="dropdown-divider">
-        <button class="dropdown-item-simple logout-item" @click.stop="logout">
-          <LogoutIcon class="dropdown-icon" />
-          Log out
-        </button>
-      </div>
-      </div>
-    </div>
   </div>
 </template>
 <script lang="ts" setup>
@@ -121,7 +190,7 @@ import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
 import { WalletMultiButton, useWallet } from "solana-wallets-vue";
 import SettingsIcon from '@/assets/img/icons/settings.svg?component';
 import LogoutIcon from '@/assets/img/icons/logout.svg?component';
-import HomeIcon from '@/assets/img/icons/home.svg?component';
+import Logo from '~/components/UI/Logo.vue';
 import { useRouter } from 'vue-router';
 import { useLoginModal } from '~/composables/useLoginModal';
 import { useSDK } from '~/composables/useSDK';
@@ -134,6 +203,9 @@ const { openWalletModal } = useLoginModal();
 
 // Profile dropdown state  
 const showUserProfileDropdown = ref(false);
+
+// Mobile menu state
+const showMobileMenu = ref(false);
 
 // Profile dropdown functions
 const toggleUserProfileDropdown = (event: Event) => {
@@ -151,10 +223,6 @@ const openPriorityFeeSettings = () => {
 
 const openLoginModal = () => {
   openWalletModal({ redirectToHost: true });
-};
-
-const goHome = () => {
-  router.push('/');
 };
 
 // Toggle dark mode
@@ -357,56 +425,103 @@ defineExpose({
 });
 </script>
 
-<style lang="scss">
+<style scoped lang="scss">
 @use "sass:color";
-.topbar-right-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+
+.vertical-divider {
+  width: 1px;
+  height: 2rem;
+  background-color: $grey;
   flex-shrink: 0;
-  z-index: 100;
 }
 
-.theme-toggle-button,
-.login-button,
-.home-button {
-  background: $box-background-color;
-  border: none;
-  cursor: pointer;
-  padding: 0.5rem 0.75rem;
+.dark-mode .vertical-divider {
+  background-color: $grey-darker;
+}
+
+.navbar-tab {
+  padding: 0.75rem 1.25rem;
   border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: $grey;
+  transition: all 0.2s ease;
+  text-decoration: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s ease;
-  color: #6b7280;
-  font-size: 0.875rem;
+  gap: 0.5rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  
+  &:hover {
+    color: $text;
+    background: $grey-lightest;
+  }
+  
+  &.is-active {
+    color: $primary;
+    background: rgba($primary, 0.08);
+  }
+  
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.login-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
   font-weight: 500;
-  height: 40px;
-  min-width: 40px;
+  color: $grey;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.theme-toggle-button {
-  padding: 0.5rem;
-}
-
-.theme-toggle-button:hover,
 .login-button:hover {
-  background-color: color.adjust($box-background-color, $lightness: -5%);
-  color: #374151;
+  color: $text;
+  background: $grey-lightest;
 }
 
-.dark-mode .theme-toggle-button,
 .dark-mode .login-button {
-  background: $box-background-color-dark;
-  color: #9ca3af;
+  color: $grey-light;
 }
 
-.dark-mode .theme-toggle-button:hover,
 .dark-mode .login-button:hover {
-  background-color: color.adjust($box-background-color-dark, $lightness: 5%);
-  color: #d1d5db;
+  color: $white;
+  background: rgba($white, 0.05);
 }
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: $success;
+  box-shadow: 0 0 8px rgba($success, 0.4);
+  flex-shrink: 0;
+  align-self: center;
+  margin: 0;
+}
+
+.profile-section {
+  @media screen and (max-width: $tablet) {
+    justify-content: space-between;
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+}
+
 
 .profile-dropdown {
   position: relative;
@@ -616,6 +731,14 @@ defineExpose({
   box-shadow: 0 4px 12px rgba($black, 0.3);
 }
 
+
+// Mobile - hide title and divider
+@media screen and (max-width: 768px) {
+  .vertical-divider, .title {
+    display: none;
+  }
+}
+
 /* Hide TopBar profile section on mobile to prevent overlap with sidebar */
 @media screen and (max-width: 1023px) {
   .profile-dropdown,
@@ -645,5 +768,69 @@ img[alt="Twitter icon"] {
 
 .dark-mode img[alt="Twitter icon"] {
   background-color: $black;
+}
+
+// Dark mode styles
+.dark-mode {
+  .vertical-divider {
+    background-color: $grey-darker;
+  }
+  
+  .navbar-tab {
+    color: $grey-light;
+    
+    &:hover {
+      color: $white;
+      background: rgba($white, 0.05);
+    }
+    
+    &.is-active {
+      color: $white;
+      background: rgba($primary, 0.15);
+    }
+  }
+  
+  .status-link {
+    color: $white;
+    
+    &:hover {
+      background: rgba($white, 0.05);
+    }
+  }
+  
+  .mobile-menu-item {
+    color: $white;
+    
+    &:hover {
+      background: rgba($white, 0.05);
+    }
+    
+    &.is-active {
+      color: $white;
+      background: rgba($primary, 0.15);
+    }
+  }
+  
+  .mobile-menu-toggle span {
+    background: $white;
+  }
+}
+
+.light-only {
+  display: block;
+}
+
+.dark-only {
+  display: none;
+}
+
+.dark-mode {
+  .light-only {
+    display: none;
+  }
+  
+  .dark-only {
+    display: block;
+  }
 }
 </style>

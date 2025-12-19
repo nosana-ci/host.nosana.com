@@ -1,9 +1,7 @@
 <template>
   <div>
     <LayoutTopBar
-      :title="'Host your GPU on the Nosana Network'"
-      :subtitle="'Connect your NVIDIA GPU to a decentralized AI inference marketplace and earn $NOS by running workloads for clients.'"
-    />
+      :title="'Host'"/>
 
     <!-- Getting Started -->
     <section class="first-section">
@@ -21,11 +19,11 @@
             <div class="links-grid">
               <NuxtLink
                 to="https://docs.nosana.com/hosts/grid.html"
-                class="is-size-7 has-text-link"
+                class="is-size-6 has-text-link"
                 external
                 target="_blank"
               >
-                View full hardware requirements
+                Full hardware requirements
               </NuxtLink>
             </div>
           </div>
@@ -52,11 +50,11 @@
             <div class="links-grid">
               <NuxtLink
                 to="https://docs.nosana.com/hosts/grid-ubuntu.html"
-                class="is-size-7 has-text-link"
+                class="is-size-6 has-text-link"
                 external
                 target="_blank"
               >
-                Ubuntu setup guide
+                Setup guide
               </NuxtLink>
             </div>
           </div>

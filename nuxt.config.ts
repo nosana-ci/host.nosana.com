@@ -4,6 +4,17 @@ import { nodePolyfills } from "vite-plugin-node-polyfills";
 // https://nuxt.com/docs/api/configuration/nuxt-config
 
 export default defineNuxtConfig({
+  app: {
+    head: {
+      title: 'Nosana Host',
+      htmlAttrs: {
+        lang: 'en',
+      },
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+      ],
+    },
+  },
   devtools: { enabled: true },
   ssr: false,
   css: [
