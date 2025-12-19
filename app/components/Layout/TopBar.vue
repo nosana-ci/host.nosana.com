@@ -8,26 +8,6 @@
       <div class="vertical-divider mx-4"></div>
       <h2 class="title is-3">{{ title }}</h2>
     </div>
-    
-    <!-- Center: Navigation Tabs -->
-    <div class="is-flex is-flex-direction-row is-align-items-center is-hidden-mobile">
-      <nuxt-link 
-        v-if="connected && publicKey"
-        to="/" 
-        class="navbar-tab"
-        :class="{ 'is-active': $route.path === '/' }"
-      >
-        Home
-      </nuxt-link>
-      <nuxt-link 
-        v-if="connected && publicKey"
-        :to="`/${publicKey.toString()}`"
-        class="navbar-tab"
-        :class="{ 'is-active': $route.path.startsWith('/') && $route.params.id }"
-      >
-        Host
-      </nuxt-link>
-    </div>
 
     <!-- Right: Actions -->
     <div class="is-flex is-flex-direction-row is-align-items-center profile-section">
@@ -110,24 +90,6 @@
 
     <!-- Mobile Menu -->
     <div class="mobile-menu is-hidden-tablet" :class="{ 'is-active': showMobileMenu }">
-        <nuxt-link 
-          v-if="connected && publicKey"
-          to="/" 
-          class="mobile-menu-item"
-          :class="{ 'is-active': $route.path === '/' }"
-          @click="showMobileMenu = false"
-        >
-          Home
-        </nuxt-link>
-        <nuxt-link 
-          v-if="connected && publicKey"
-          :to="`/${publicKey.toString()}`"
-          class="mobile-menu-item"
-          :class="{ 'is-active': $route.path.startsWith('/') && $route.params.id }"
-          @click="showMobileMenu = false"
-        >
-          Host
-        </nuxt-link>
         <a 
           href="https://nosana.statuspage.io" 
           target="_blank" 
