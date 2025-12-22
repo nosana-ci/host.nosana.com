@@ -9,10 +9,10 @@
           <div>
             <slot />
           </div>
-        </div>
-        <SiteFooter class="mt-auto" />
+        </div>        
       </div>
     </section>
+    <SiteFooter class="mt-auto" />
 
     <!-- Login Modal -->
     <LoginModal
@@ -62,7 +62,7 @@ const handleLoginSuccess = () => {
 
 <style lang="scss" scoped>
 #content {
-  min-height: 100vh;
+  min-height: calc(100vh - 100px);
   max-width: 1600px;
   min-width: 0;
 }

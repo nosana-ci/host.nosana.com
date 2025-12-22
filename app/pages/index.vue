@@ -101,7 +101,7 @@ const onExistingHostClick = () => {
 <style scoped lang="scss">
 .landing-page-container {
   position: relative;
-  min-height: 100vh;
+  min-height: calc(100vh - 100px);
   overflow: hidden;
 }
 
@@ -110,7 +110,7 @@ const onExistingHostClick = () => {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100vh;
+  height: calc(100vh - 100px);
   z-index: 0;
   opacity: 0.7;
   
