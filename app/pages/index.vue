@@ -1,79 +1,29 @@
 <template>
   <div class="landing-page-container">
-    <!-- Background World Map -->
-    <div class="map-background">
-      <WorldMap />
-    </div>
+    <LayoutTopBar :title="'Host'"/>
 
-    <!-- Content Overlay -->
-    <div class="content-overlay">
-      <LayoutTopBar
-        :title="'Host'"/>
+    <section class="section hero mt-6">
+      <div class="hero-body has-text-centered mt-5">
+        <h1 class="title is-1 mb-5 mt-6">Track your Nosana host's performance and earnings</h1>
+        <p class="subtitle is-4 mb-6">
+          Monitor your GPU performance and view real-time statistics
+        </p>
 
-      <!-- Getting Started -->
-      <section class="first-section">
-      <div class="columns is-multiline">
-        <div class="column is-12-tablet is-6-desktop">
-          <div class="box equal-height-box">
-            <h3 class="title is-5 mb-3">Hardware requirements</h3>
-            <ul class="requirements-list">
-              <li><strong>RAM</strong>: 12GB or more</li>
-              <li><strong>Storage</strong>: 256GB+ NVMe SSD (1TB recommended for large models)</li>
-              <li><strong>Bandwidth</strong>: 100 Mbps down / 50 Mbps up (500/250 Mbps recommended)</li>
-              <li><strong>GPU</strong>: Recent NVIDIA RTX / A-series (see full list)</li>
-              <li><strong>OS</strong>: Ubuntu 20.04+ (native, Windows / WSL2 deprecated)</li>
-            </ul>
-            <div class="links-grid">
-              <NuxtLink
-                to="https://docs.nosana.com/hosts/grid.html"
-                class="is-size-6 has-text-link"
-                external
-                target="_blank"
-              >
-                Full hardware requirements
-              </NuxtLink>
-            </div>
-          </div>
-        </div>
-
-        <div class="column is-12-tablet is-6-desktop">
-          <div class="box equal-height-box setup-overview-box">
-            <h3 class="title is-5 mb-3">Setup overview</h3>
-            <ul class="steps-list">
-              <li>
-                Install Docker and configure it for non-root usage.
-              </li>
-              <li>
-                Install NVIDIA drivers and the NVIDIA Container Toolkit.
-              </li>
-              <li>
-                Run the Nosana start script:
-                <pre><code>bash &lt;(wget -qO- https://nosana.com/start.sh)</code></pre>
-              </li>
-              <li>
-                Register your node and <strong>back up</strong> <code>~/.nosana/nosana_key.json</code>.
-              </li>
-            </ul>
-            <div class="links-grid">
-              <NuxtLink
-                to="https://docs.nosana.com/hosts/grid-ubuntu.html"
-                class="is-size-6 has-text-link"
-                external
-                target="_blank"
-              >
-                Setup guide
-              </NuxtLink>
-            </div>
-            <div class="login-button-container">
-              <button class="button is-primary" @click="onExistingHostClick">
-                Already a host? Log in
-              </button>
-            </div>
-          </div>
+        <div class="actions-container mt-5">
+          <button class="button is-primary is-large login-button mb-4" @click="onLoginClick">
+            <span>Login</span>
+          </button>
+          
+          <a
+            href="https://docs.nosana.io/hosts/grid.html"
+            target="_blank"
+            class="setup-link is-size-5"
+          >
+            Not a host yet? Setup a Host
+          </a>
         </div>
       </div>
     </section>
-    </div>
   </div>
 </template>
 
@@ -83,13 +33,12 @@
 import { useWallet } from "solana-wallets-vue";
 import { useLoginModal } from "~/composables/useLoginModal";
 import LayoutTopBar from "~/components/Layout/TopBar.vue";
-import WorldMap from "~/components/WorldMap.vue";
 
 const router = useRouter();
 const { connected, publicKey } = useWallet();
 const { openWalletModal } = useLoginModal();
 
-const onExistingHostClick = () => {
+const onLoginClick = () => {
   if (connected.value && publicKey.value) {
     router.push(`/${publicKey.value.toString()}`);
     return;
@@ -99,107 +48,68 @@ const onExistingHostClick = () => {
 </script>
 
 <style scoped lang="scss">
+@use "~/assets/styles/variables" as *;
+
 .landing-page-container {
-  position: relative;
   min-height: calc(100vh - 100px);
+  display: flex;
+  flex-direction: column;
+  position: relative;
   overflow: hidden;
+  margin-left: calc(-1 * var(--bulma-section-padding-medium, 1.5rem));
+  margin-right: calc(-1 * var(--bulma-section-padding-medium, 1.5rem));
 }
 
-.map-background {
-  position: fixed;
-  top: 0;
-  left: 0;
+.actions-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.login-button {
+  font-weight: 700;
+  transition: all 0.2s ease;
+  height: auto;
+  max-width: 300px;
   width: 100%;
-  height: calc(100vh - 100px);
-  z-index: 0;
-  opacity: 0.7;
-  
-  :deep(.box) {
-    height: 100%;
-    background: transparent !important;
-  }
-  
-  :deep(.world-map-container) {
-    height: 100%;
+  padding: 1.2rem;
+  border-radius: 8px;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba($primary, 0.01);
+    filter: brightness(1.1);
   }
 }
 
-.content-overlay {
+.setup-link {
+  text-decoration: none;
+  transition: color 0.2s ease;
   position: relative;
-  z-index: 1;
-  pointer-events: none;
+  color: $grey;
   
-  // Make all interactive elements clickable
-  > * {
-    pointer-events: auto;
+  &::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    bottom: -2px;
+    left: 0;
+    background-color: currentColor;
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.2s ease;
   }
-  
-  // Ensure nested interactive elements work
-  :deep(a),
-  :deep(button),
-  :deep(input),
-  :deep(form),
-  :deep(.box),
-  :deep(.button),
-  :deep(.input),
-  :deep(.field),
-  :deep(.control) {
-    pointer-events: auto;
+
+  &:hover {
+    color: $secondary !important;
+    
+    &::after {
+      transform: scaleX(1);
+    }
   }
-}
-
-.hero-section {
-  padding: 2rem 0 1rem;
-}
-
-.hero-content {
-  max-width: 720px;
-}
-
-.requirements-list,
-.steps-list {
-  margin-left: 0;
-}
-
-.requirements-list li,
-.steps-list li {
-  margin-bottom: 0.35rem;
-}
-
-pre {
-  background: rgba(10, 10, 10, 0.05);
-  padding: 0.5rem 0.75rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  overflow-x: auto;
-}
-
-.links-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  margin-top: auto;
-}
-
-.equal-height-box {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.setup-overview-box {
-  position: relative;
-}
-
-.login-button-container {
-  position: absolute;
-  bottom: 1rem;
-  right: 1rem;
-  margin-top: auto;
-}
-
-.first-section {
-  margin-top: 2rem;
 }
 </style>
 

@@ -6,7 +6,36 @@
         <Logo width="160px" :white="true" :animated="true" class="dark-only" />
       </nuxt-link>
       <div class="vertical-divider mx-4"></div>
-      <h2 class="title is-3">{{ title }}</h2>
+      <h2 class="title is-3 mb-0">{{ title }}</h2>
+      <div
+        v-if="connected && wallet && !hideButtons"
+        class="dropdown mobile-avatar-dropdown is-hidden-desktop ml-3"
+        :class="{ 'is-active': showMobileDropdown }"
+      >
+        <div class="dropdown-trigger">
+          <span class="mobile-avatar-trigger" @click="showMobileDropdown = !showMobileDropdown">
+            <img
+              v-if="wallet.adapter.icon"
+              :src="wallet.adapter.icon"
+              :alt="wallet.adapter.name + ' icon'"
+              class="wallet-icon"
+            />
+            <span v-else>W</span>
+          </span>
+        </div>
+        <div class="dropdown-menu">
+          <div class="dropdown-content">
+            <div class="dropdown-item">
+              <p class="is-size-7 has-text-grey mb-0">{{ getWalletAddress() }}</p>
+            </div>
+            <hr class="dropdown-divider">
+            <button class="dropdown-item logout-item" @click="logout">
+              <LogoutIcon class="dropdown-icon" />
+              Log out
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Right: Actions -->
@@ -165,6 +194,7 @@ const { openWalletModal } = useLoginModal();
 
 // Profile dropdown state  
 const showUserProfileDropdown = ref(false);
+const showMobileDropdown = ref(false);
 
 // Mobile menu state
 const showMobileMenu = ref(false);
@@ -244,6 +274,7 @@ const logout = async () => {
     if (connected.value) {
       await disconnect();
     }
+    router.push('/');
   } catch (error) {
     console.error('Error logging out:', error);
   }
@@ -288,9 +319,9 @@ onMounted(() => {
     clickHandler = (e: Event) => {
       const target = e.target as HTMLElement;
       const dropdown = target?.closest?.('.profile-dropdown');
-      if (!dropdown && showUserProfileDropdown.value) {
-        showUserProfileDropdown.value = false;
-      }
+      const mobileDropdown = target?.closest?.('.mobile-avatar-dropdown');
+      if (!dropdown && showUserProfileDropdown.value) showUserProfileDropdown.value = false;
+      if (!mobileDropdown && showMobileDropdown.value) showMobileDropdown.value = false;
     };
     document.addEventListener('click', clickHandler);
   }
@@ -793,6 +824,52 @@ img[alt="Twitter icon"] {
   
   .dark-only {
     display: block;
+  }
+}
+
+/* Mobile wallet dropdown */
+.mobile-avatar-dropdown {
+  display: inline-flex;
+  align-items: center;
+
+  .dropdown-menu {
+    right: 0;
+    left: auto;
+    min-width: 180px;
+  }
+
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.mobile-avatar-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: $box-background-color;
+  cursor: pointer;
+  border: 1px solid $border;
+
+  span {
+    font-weight: 600;
+    color: $text;
+  }
+}
+
+.dark-mode {
+  .mobile-avatar-trigger {
+    background: $box-background-color-dark;
+    border-color: $grey-darker;
+
+    span {
+      color: $white;
+    }
   }
 }
 </style>

@@ -1,6 +1,9 @@
 <template>
   <div id="app">
-    <section class="columns ml-0 mr-0 mt-0 mb-0">
+    <section
+      class="columns ml-0 mr-0 mt-0 mb-0"
+      :class="{ 'has-worldmap-bg': isHomePage }"
+    >
       <div
         id="content"
         class="column ultrawide-centered"
@@ -26,6 +29,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { useRedirect } from "~/composables/useRedirect";
 import { useLoginModal } from "~/composables/useLoginModal";
 import { useRouter, useRoute } from "vue-router";
@@ -41,7 +45,9 @@ useRedirect();
 // Initialize login modal
 const { modalState, closeModal } = useLoginModal();
 const router = useRouter();
+const route = useRoute();
 const { publicKey } = useWallet();
+const isHomePage = computed(() => route.path === "/");
 
 // Handle successful login
 const handleLoginSuccess = () => {
@@ -75,6 +81,39 @@ const handleLoginSuccess = () => {
   @media screen and (max-width: $tablet) {
     padding-left: 0;
     padding-right: 0;
+  }
+}
+
+.has-worldmap-bg {
+  position: relative;
+  overflow: hidden;
+  background: none;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("/img/worldmap.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(5px);
+    opacity: 0.3;
+    z-index: 0;
+  }
+
+  > * {
+    position: relative;
+    z-index: 2;
+  }
+}
+
+.dark-mode {
+  .has-worldmap-bg {
+    &::before {
+      opacity: 0.1;
+      filter: blur(5px) brightness(0.7);
+    }
   }
 }
 </style>
