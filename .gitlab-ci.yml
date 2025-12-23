@@ -1,14 +1,7 @@
-image: node:20
+include:
+  - project: nosana-ci/tools/cicd/gitlab-ci
+    file: npm-generic.yml
 
-pages:
-  stage: deploy
-  script:
-    - npm ci
-    - npm run generate
-    - cp -r .output/public public
-  artifacts:
-    paths:
-      - public
-  only:
-    - main
-
+variables:
+  NODE_VERSION: 22
+  OUTPUT_DIR: .output/public
