@@ -10,8 +10,15 @@ export default defineNuxtConfig({
       htmlAttrs: {
         lang: 'en',
       },
+      meta: [
+        { name: 'theme-color', content: '#10E80C' },
+        { name: 'apple-mobile-web-app-title', content: 'Nosana Host' },
+      ],
       link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico', sizes: 'any' },
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+        { rel: 'manifest', href: '/_nuxt/manifest.webmanifest' },
       ],
     },
   },
@@ -25,16 +32,23 @@ export default defineNuxtConfig({
   },
   pwa: {
     manifest: {
-      name: "Nosana Dashboard",
-      short_name: "nosana",
+      name: "Nosana Host",
+      short_name: "Nosana Host",
       theme_color: "#10E80C",
       background_color: "#ffffff",
       display: "standalone",
-      description: "Nosana Dashboard",
+      description: "Nosana Host - Monitor and manage your GPU hosts",
+      start_url: "/",
+      scope: "/",
       icons: [
         {
-          src: "icon.png",
-          sizes: "150x150",
+          src: "/web-app-manifest-192x192.png",
+          sizes: "192x192",
+          type: "image/png",
+        },
+        {
+          src: "/web-app-manifest-512x512.png",
+          sizes: "512x512",
           type: "image/png",
         },
       ],
