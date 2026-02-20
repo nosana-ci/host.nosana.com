@@ -1,8 +1,8 @@
-# Nosana Dashboard
+# Nosana Host UI
 
-Nuxt 3 site for the [Nosana Explorer](https://dashboard.nosana.com).
+Nuxt 3 site for the [Nosana Host UI](https://host.nosana.com).
 
-![Nosana Dashboard](/static/img/screenshot.jpg)
+![Nosana Host UI](/static/img/screenshot.jpg)
 
 ## Build Setup
 

@@ -23,12 +23,12 @@
               <span v-else>{{ f.value ?? '-' }}</span>
             </template>
             <template v-else-if="f.key === 'runningJob' && f.value">
-              <a :href="`https://explorer.nosana.com/jobs/${f.value}`" target="_blank" rel="noopener noreferrer" class="address is-family-monospace">
+              <a :href="`https://explore.nosana.com/jobs/${f.value}`" target="_blank" rel="noopener noreferrer" class="address is-family-monospace">
                 {{ f.value }}
               </a>
             </template>
             <template v-else-if="f.key === 'hostMarket' && f.value">
-              <a :href="`https://explorer.nosana.com/markets/${f.value}`" target="_blank" rel="noopener noreferrer" class="address" :class="{ 'is-family-monospace': !testgridMarkets?.find((tgm: any) => tgm.address === f.value) }">
+              <a :href="`https://explore.nosana.com/markets/${f.value}`" target="_blank" rel="noopener noreferrer" class="address" :class="{ 'is-family-monospace': !testgridMarkets?.find((tgm: any) => tgm.address === f.value) }">
                 <span v-if="testgridMarkets?.find((tgm: any) => tgm.address === f.value)">
                   {{ testgridMarkets.find((tgm: any) => tgm.address === f.value).name }}
                 </span>
@@ -66,12 +66,12 @@
               <span v-else>{{ f.value ?? '-' }}</span>
             </template>
             <template v-else-if="f.key === 'runningJob' && f.value">
-              <a :href="`https://explorer.nosana.com/jobs/${f.value}`" target="_blank" rel="noopener noreferrer" class="address is-family-monospace">
+              <a :href="`https://explore.nosana.com/jobs/${f.value}`" target="_blank" rel="noopener noreferrer" class="address is-family-monospace">
                 {{ f.value }}
               </a>
             </template>
             <template v-else-if="f.key === 'hostMarket' && f.value">
-              <a :href="`https://explorer.nosana.com/markets/${f.value}`" target="_blank" rel="noopener noreferrer" class="address" :class="{ 'is-family-monospace': !testgridMarkets?.find((tgm: any) => tgm.address === f.value) }">
+              <a :href="`https://explore.nosana.com/markets/${f.value}`" target="_blank" rel="noopener noreferrer" class="address" :class="{ 'is-family-monospace': !testgridMarkets?.find((tgm: any) => tgm.address === f.value) }">
                 <span v-if="testgridMarkets?.find((tgm: any) => tgm.address === f.value)">
                   {{ testgridMarkets.find((tgm: any) => tgm.address === f.value).name }}
                 </span>

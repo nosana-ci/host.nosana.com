@@ -23,7 +23,7 @@
       </tr>
       <tr v-for="job in jobs" v-else :key="job.address" class="clickable-row" @click="navigateToJob(job.address)">
         <td>
-          <a :href="`https://explorer.nosana.com/jobs/${job.address}`" target="_blank" rel="noopener noreferrer" class="address is-family-monospace" @click.stop>
+          <a :href="`https://explore.nosana.com/jobs/${job.address}`" target="_blank" rel="noopener noreferrer" class="address is-family-monospace" @click.stop>
             {{ job.address }}
           </a>
         </td>
@@ -82,7 +82,7 @@
           <span class="clickable-row-cell-content">
             <a
               v-if="testgridMarkets.find((tgm: any) => tgm.address === job.market.toString())"
-              :href="`https://explorer.nosana.com/markets/${job.market.toString()}`"
+              :href="`https://explore.nosana.com/markets/${job.market.toString()}`"
               target="_blank"
               rel="noopener noreferrer"
               class="address"
@@ -93,7 +93,7 @@
             </a>
             <a
               v-else
-              :href="`https://explorer.nosana.com/markets/${job.market.toString()}`"
+              :href="`https://explore.nosana.com/markets/${job.market.toString()}`"
               target="_blank"
               rel="noopener noreferrer"
               class="address is-family-monospace"
@@ -143,7 +143,7 @@ const router = useRouter();
 
 // Navigate to job explorer page
 const navigateToJob = (jobAddress: string) => {
-  window.open(`https://explorer.nosana.com/jobs/${jobAddress}`, '_blank', 'noopener,noreferrer');
+  window.open(`https://explore.nosana.com/jobs/${jobAddress}`, '_blank', 'noopener,noreferrer');
 };
 
 // Fetch stats data needed for CurrentMarketPrice

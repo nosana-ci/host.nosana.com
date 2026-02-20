@@ -58,7 +58,7 @@
       <span class="quick-detail-value">
         <a
           v-if="nodeRuns && nodeRuns.length > 0"
-          :href="`https://explorer.nosana.com/jobs/${nodeRuns[0].account.job}`"
+          :href="`https://explore.nosana.com/jobs/${nodeRuns[0].account.job}`"
           target="_blank"
           rel="noopener noreferrer"
           class="address is-family-monospace"
@@ -76,7 +76,7 @@
       <span class="quick-detail-value">
         <span v-if="queueInfo">
           <a
-            :href="`https://explorer.nosana.com/markets/${queueInfo.market.address.toString()}`"
+            :href="`https://explore.nosana.com/markets/${queueInfo.market.address.toString()}`"
             target="_blank"
             rel="noopener noreferrer"
             class="address is-family-monospace"
@@ -104,7 +104,7 @@
           <span v-if="nodeSpecs">
             <template v-if="nodeSpecs.marketAddress">
               <a
-                :href="`https://explorer.nosana.com/markets/${nodeSpecs.marketAddress}`"
+                :href="`https://explore.nosana.com/markets/${nodeSpecs.marketAddress}`"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="address is-family-monospace"
