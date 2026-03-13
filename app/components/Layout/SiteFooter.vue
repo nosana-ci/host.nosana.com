@@ -10,6 +10,8 @@
       <span class="has-text-grey">|</span>
       <a href="https://explore.nosana.com/" target="_blank" class="has-text-grey">Explore</a>
       <span class="has-text-grey">|</span>
+      <a href="https://host.nosana.com/" class="has-text-black has-text-weight-bold">Host</a>
+      <span class="has-text-grey">|</span>
       <a href="https://stake.nosana.com/" target="_blank" class="has-text-grey">Stake</a>
     </div>
     <div class="is-size-6 mb-1">
