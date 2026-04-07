@@ -85,6 +85,7 @@ export default defineNuxtConfig({
       rpcUrl: process.env.RPC_URL,
       apiBase: process.env.API_BASE,
       network: process.env.NETWORK || "mainnet",
+      maintenance: process.env.NUXT_PUBLIC_MAINTENANCE === "true",
     },
   },
   gtag: {
