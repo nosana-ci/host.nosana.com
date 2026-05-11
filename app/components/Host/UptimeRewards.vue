@@ -6,7 +6,7 @@
           <div class="has-text-centered">
             <p class="heading mb-2">Available to Claim</p>
             <div class="mb-4">
-              <p class="title is-3 mb-1" v-if="!loadingNodeSpecs">
+              <p class="title is-3 mb-1" v-if="!loadingRewards">
                 {{ claimableRewards.toFixed(6) }}
                 <span class="has-text-grey-dark is-size-6">NOS</span>
               </p>
@@ -34,7 +34,7 @@
             <p class="heading mb-2">Total Claimed</p>
             <div class="mb-0">
               <!-- Adjusted margin for consistency if no button -->
-              <p class="title is-3 mb-1" v-if="!loadingNodeSpecs">
+              <p class="title is-3 mb-1" v-if="!loadingRewards">
                 {{ totalClaimedRewards.toFixed(6) }}
                 <span class="has-text-grey-dark is-size-6">NOS</span>
               </p>
@@ -83,14 +83,14 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import type { MessageSignerWalletAdapter } from "@solana/wallet-adapter-base";
 import { useToast } from "vue-toastification";
 import InfoIcon from '@/assets/img/icons/info.svg?component';
+import { createSignedWalletAuthHeader } from "~/utils/createSignedWalletAuthHeader";
 
 // Props
 interface Props {
-  nodeSpecs: any;
-  loadingNodeSpecs: boolean;
+  rewards: any;
+  loadingRewards: boolean;
   connected: boolean;
   publicKey: any;
   wallet: any;
@@ -98,7 +98,7 @@ interface Props {
 
 // Emits
 interface Emits {
-  (e: "refresh-node-specs"): void;
+  (e: "refresh-rewards"): void;
 }
 
 const props = defineProps<Props>();
@@ -107,33 +107,18 @@ const emit = defineEmits<Emits>();
 const toast = useToast();
 const config = useRuntimeConfig().public;
 
-const createAuthHeader = async (message: string): Promise<string> => {
-  if (!props.connected || !props.publicKey || !props.wallet) {
-    throw new Error("Wallet not connected or not found");
-  }
-
-  const adapter = props.wallet.adapter as MessageSignerWalletAdapter;
-  if (!adapter.signMessage) {
-    throw new Error("Wallet does not support message signing");
-  }
-
-  const encodedMessage = new TextEncoder().encode(message);
-  const signedMessage = await adapter.signMessage(encodedMessage);
-
-  // Convert to base64 format expected by backend
-  const base64Signature = Buffer.from(signedMessage).toString("base64");
-
-  return `${props.publicKey.toString()}:${base64Signature}`;
-};
-
 // Uptime rewards logic
 const claimingRewards = ref(false);
 const claimableRewards = computed(() => {
-  return props.nodeSpecs?.claimableUptimeNosRewards || 0;
+  const rawValue = props.rewards?.claimableUptimeNosRewards ?? 0;
+
+  return Number(rawValue) || 0;
 });
 
 const totalClaimedRewards = computed(() => {
-  return props.nodeSpecs?.totalClaimedUptimeNosRewards || 0;
+  const rawValue = props.rewards?.totalClaimedUptimeNosRewards ?? 0;
+
+  return Number(rawValue) || 0;
 });
 
 const showClaimRewards = computed(() => {
@@ -149,7 +134,12 @@ const claimRewards = async () => {
   claimingRewards.value = true;
 
   try {
-    const authHeader = await createAuthHeader("Hello Nosana Node!");
+    const authHeader = await createSignedWalletAuthHeader({
+      connected: props.connected,
+      publicKey: props.publicKey,
+      wallet: props.wallet,
+      message: props.publicKey.toString(), // Use public key as message for signing
+    });
 
     const response = (await $fetch(`${config.apiBase}/api/nodes/payment`, {
       method: "POST",
@@ -178,7 +168,7 @@ const claimRewards = async () => {
         });
       }
 
-      emit("refresh-node-specs");
+      emit("refresh-rewards");
     } else {
       toast.error(response.message || "Failed to claim rewards");
     }

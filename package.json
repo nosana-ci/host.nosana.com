@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev --dotenv .env.local",
+    "dev": "nuxt dev --host 0.0.0.0 --port 3001 --dotenv .env.local-backend",
     "generate": "nuxt generate --dotenv .env.${APP_ENV:=production}",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
@@ -27,6 +27,8 @@
     "vue-router": "^4.6.3"
   },
   "dependencies": {
+    "@nosana/authorization": "^2.2.6",
+    "@nosana/kit": "^2.2.7",
     "@nosana/sdk": "^0.4.69",
     "@solana/wallet-adapter-wallets": "^0.19.25",
     "@vueuse/components": "^10.9.0",

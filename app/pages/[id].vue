@@ -3,7 +3,7 @@
   </LayoutTopBar>
 
   <!-- Earnings Section - Only show if connected wallet matches node -->
-  <div v-if="isOwner" class="columns">
+  <div v-if="showUptimeSection" class="columns">
     <div class="column is-4">
       <!-- <h3 class="title is-4 mt-5 mb-4">Earnings</h3> -->
       <div class="columns is-multiline mb-4">
@@ -117,33 +117,28 @@
   <!-- Uptime Container - Only show if owner -->
   <div 
     class="box mt-5" 
-    v-if="isOwner && nodeAddress && nodeSpecs && (
-      (nodeSpecs.claimableUptimeNosRewards && nodeSpecs.claimableUptimeNosRewards > 0) ||
-      (nodeSpecs.totalClaimedUptimeNosRewards && nodeSpecs.totalClaimedUptimeNosRewards > 0) ||
-      nodeSpecs.marketAddress === 'Ekro9NTNqLbnMkN7x7y2rY9AeTkazcHj2PPaTxT1Cogz'
-    )"
+    v-if="showUptimeSection"
   >
     <UptimeChart :node-address="nodeAddress" />
 
     <hr class="my-4">
     <UptimeRewards 
-      v-if="nodeSpecs"
-      :node-specs="nodeSpecs"
-      :loading-node-specs="loadingNodeSpecs"
+      :rewards="uptimeRewards"
+      :loading-rewards="loadingUptimeRewards"
       :connected="connected && isOwner"
       :public-key="publicKey"
       :wallet="wallet"
-      @refresh-node-specs="refreshNodeSpecs"
+      @refresh-rewards="refreshUptimeRewards"
     />
   </div>
 
   <!-- <h3 class="title is-4 mt-5 mb-4">Info</h3> -->
   <div class="box">
     <HostQuickDetails
-      v-if="nodeAddress && combinedSpecs"
+      v-if="nodeAddress && nodeSpecs"
       :node-address="nodeAddress"
-      :combined-specs="combinedSpecs"
-      :node-ranking="nodeRanking"
+      :node-specs="nodeSpecs"
+      :metrics="nodeSpecsMetrics"
       :jobs="jobs"
       :loading-jobs="loadingJobs"
       :node-info="nodeInfo"
@@ -170,7 +165,6 @@
     />
   </div>
   
-  <!-- Deployments ran list moved from HostInfo to here -->
   <div class="box mt-5" v-if="nodeAddress">
     <DeploymentList
       :per-page="jobLimit"
@@ -208,6 +202,7 @@ import TemplatePerformanceChart from "~/components/Host/TemplatePerformanceChart
 import UptimeChart from "~/components/Host/UptimeChart.vue";
 import UptimeRewards from "~/components/Host/UptimeRewards.vue";
 import HostQuickDetails from "~/components/Host/HostQuickDetails.vue";
+import { createSignedWalletAuthHeader } from "~/utils/createSignedWalletAuthHeader";
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
@@ -811,7 +806,6 @@ const chartOptions = computed(() => {
   };
 });
 
-// Job list data - moved from HostInfo (simplified to always fetch when nodeAddress exists)
 const jobPage = ref(1);
 const jobState = ref<number | null>(null);
 const jobStateMapping = { 0: "QUEUED", 1: "RUNNING", 2: "COMPLETED", 3: "STOPPED" };
@@ -839,9 +833,9 @@ const totalRunJobs = computed(() => {
 });
 
 // Node specs data for benchmark
-const nodeSpecsUrl = computed(() => nodeAddress.value ? `/api/nodes/${nodeAddress.value}/specs` : '');
+const nodeSpecsUrl = computed(() => nodeAddress.value ? `/api/nodes/${nodeAddress.value}/metrics` : '');
 
-const { data: nodeSpecs, pending: loadingNodeSpecs, refresh: refreshNodeSpecs } = useAPI(
+const { data: nodeSpecs, pending: loadingNodeSpecs } = useAPI(
   nodeSpecsUrl,
   {
     watch: [nodeSpecsUrl],
@@ -865,70 +859,69 @@ const { data: nodeInfo, pending: loadingNodeInfo } = useAPI(
   }
 );
 
-// NEW: Node Ranking
-interface NodeRanking {
-  node: string;
-  participationRate: number;
-  uptimePercentage: number;
-}
-const nodeRankingUrl = computed(() => {
-  if (!nodeAddress.value) return '';
-  return `/api/benchmarks/node-report?node=${nodeAddress.value}`;
+const nodeSpecsMetrics = computed(() => nodeSpecs.value?.metrics ?? null);
+
+const createEmptyUptimeRewards = () => ({
+  claimableUptimeNosRewards: 0,
+  claimableUptimeUsdRewards: 0,
+  totalClaimedUptimeNosRewards: 0,
+  totalClaimedUptimeUsdRewards: 0,
 });
-const { data: nodeRanking, pending: loadingNodeRanking } = useAPI(
-  nodeRankingUrl,
-  {
-    default: () => null,
-    watch: [nodeRankingUrl]
+
+const {
+  data: uptimeRewards,
+  pending: loadingUptimeRewards,
+  refresh: refreshUptimeRewards,
+} = useMyAsyncData('uptime-rewards', async () => {
+  if (
+    !isOwner.value ||
+    !nodeAddress.value ||
+    !connected.value ||
+    !publicKey.value ||
+    !wallet.value
+  ) {
+    return createEmptyUptimeRewards();
   }
-);
 
-// NEW: Combined Specs (moved from HostInfo.vue, adapted for host.vue context)
-const combinedSpecs = computed(() => {
-  if (!nodeAddress.value || !nodeSpecs.value) return null;
+  const authorization = await createSignedWalletAuthHeader({
+    connected: connected.value,
+    publicKey: publicKey.value,
+    wallet: wallet.value,
+    message: publicKey.value.toString(), // Use public key as the message to sign
+  });
 
-  const nodeInfoData = nodeInfo.value?.info;
+  return $fetch('/api/nodes/rewards', {
+    baseURL: useRuntimeConfig().public.apiBase as string,
+    headers: {
+      Accept: 'application/json',
+      authorization,
+    },
+  });
+}, {
+  watch: [isOwner, nodeAddress, connected, publicKey, wallet],
+  default: createEmptyUptimeRewards,
+  disableToastOnError: true,
+});
 
-  return {
-    nodeAddress: nodeAddress.value,
-    marketAddress: nodeSpecs.value.marketAddress,
-    ram: nodeInfoData?.ram_mb
-      ? Math.round(nodeInfoData.ram_mb)
-      : nodeSpecs.value.ram ? Math.round(Number(nodeSpecs.value.ram)) : 0,
-    diskSpace: nodeInfoData?.disk_gb
-      ? Math.round(Number(nodeInfoData.disk_gb))
-      : nodeSpecs.value.diskSpace ? Math.round(Number(nodeSpecs.value.diskSpace)) : 0,
-    cpu: nodeInfoData?.cpu?.model ?? nodeSpecs.value.cpu,
-    country: nodeInfoData?.country ?? nodeSpecs.value.country,
-    download: nodeSpecs.value.avgDownload10,
-    upload: nodeSpecs.value.avgUpload10,
-    ping: nodeSpecs.value.avgPing10,
-    gpus: nodeInfoData?.gpus?.devices
-      ? nodeInfoData.gpus.devices.map((gpu: any) => ({
-          gpu: gpu.name,
-          memory: gpu.memory?.total_mb,
-          architecture: gpu.network_architecture 
-            ? `${gpu.network_architecture.major}.${gpu.network_architecture.minor}` 
-            : undefined,
-        }))
-      : nodeSpecs.value.gpus,
-    cudaVersion:
-      nodeInfoData?.gpus?.cuda_driver_version ?? nodeSpecs.value.cudaVersion,
-    nvmlVersion:
-      nodeInfoData?.gpus?.nvml_driver_version ?? nodeSpecs.value.nvmlVersion,
-    nodeVersion: nodeInfoData?.version ?? nodeSpecs.value.nodeVersion,
-    systemEnvironment: nodeInfoData?.system_environment
-      ? nodeInfoData.system_environment.toLowerCase().includes("wsl")
-        ? "WSL"
-        : nodeInfoData.system_environment
-          ? "Linux"
-          : null
-      : nodeSpecs.value.systemEnvironment
-        ? nodeSpecs.value.systemEnvironment.toLowerCase().includes("wsl")
-          ? "WSL"
-          : "Linux"
-        : null,
-  };
+const claimableUptimeNosRewards = computed(() => {
+  const rawValue = uptimeRewards.value?.claimableUptimeNosRewards ?? 0;
+  return Number(rawValue) || 0;
+});
+
+const totalClaimedUptimeNosRewards = computed(() => {
+  const rawValue = uptimeRewards.value?.totalClaimedUptimeNosRewards ?? 0;
+  return Number(rawValue) || 0;
+});
+
+const showUptimeSection = computed(() => {
+  if (!isOwner.value || !nodeAddress.value || !nodeSpecs.value) {
+    return false;
+  }
+
+  return (
+    claimableUptimeNosRewards.value > 0 ||
+    totalClaimedUptimeNosRewards.value > 0
+  );
 });
 
 // Market relation logic (already existing)
