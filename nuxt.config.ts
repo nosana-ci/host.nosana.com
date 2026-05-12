@@ -86,6 +86,7 @@ export default defineNuxtConfig({
       apiBase: process.env.API_BASE,
       network: process.env.NETWORK || "mainnet",
       maintenance: process.env.NUXT_PUBLIC_MAINTENANCE === "true",
+      nodeDomain: process.env.NUXT_PUBLIC_NODE_DOMAIN,
     },
   },
   gtag: {
