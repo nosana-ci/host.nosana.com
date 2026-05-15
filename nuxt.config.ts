@@ -3,6 +3,12 @@ import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 
+const isLocalDev = process.env.NODE_ENV !== "production";
+
+const resolveRuntimeEnv = (serverKey: string, publicKey: string) => {
+  return process.env[serverKey] ?? (isLocalDev ? process.env[publicKey] : undefined);
+};
+
 export default defineNuxtConfig({
   app: {
     head: {
@@ -82,11 +88,11 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      rpcUrl: process.env.RPC_URL,
-      apiBase: process.env.API_BASE,
-      network: process.env.NETWORK || "mainnet",
+      rpcUrl: resolveRuntimeEnv("RPC_URL", "NUXT_PUBLIC_RPC_URL"),
+      apiBase: resolveRuntimeEnv("API_BASE", "NUXT_PUBLIC_API_BASE"),
+      nodeDomain: resolveRuntimeEnv("NODE_DOMAIN", "NUXT_PUBLIC_NODE_DOMAIN"),
+      network: resolveRuntimeEnv("NETWORK", "NUXT_PUBLIC_NETWORK") || "mainnet",
       maintenance: process.env.NUXT_PUBLIC_MAINTENANCE === "true",
-      nodeDomain: process.env.NUXT_PUBLIC_NODE_DOMAIN,
     },
   },
   gtag: {

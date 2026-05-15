@@ -19,7 +19,7 @@
       </div>
     </div>
 
-    <div class="chart-wrapper" :class="{ 'has-chart': templateData && templateData.templates.length > 0 && !loading && !error }">
+    <div class="chart-wrapper" :class="{ 'has-chart': hasRenderableData }">
       <div v-if="loading" class="has-text-centered">
         <progress class="progress is-small is-info" max="100"></progress>
         <p>Loading benchmark data...</p>
@@ -27,10 +27,7 @@
       <div v-else-if="error" class="notification is-warning">
         {{ error }}
       </div>
-      <div
-        v-else-if="!templateData || templateData.templates.length === 0"
-        class="notification"
-      >
+      <div v-else-if="!hasRenderableData" class="notification">
         No benchmark data available for this host
       </div>
       <Bar
@@ -75,58 +72,51 @@ const props = defineProps({
 
 interface NodePerformance {
   tokensPerSecond: number;
-  temperature: number;
-  wattage: number;
+  gpuTemperatureAvg: number;
+  gpuWattageAvg: number;
   benchmarkCount: number;
 }
 
-interface MarketOption {
-  name: string;
-  type: string;
-  slug: string;
-  templates: Record<string, NodePerformance>;
-}
+type PerformanceMetrics = Partial<NodePerformance>;
 
 interface TemplatePerformance {
   templateId: string;
   templateName: string;
-  node: NodePerformance;
+  node: PerformanceMetrics;
+  market: PerformanceMetrics;
 }
 
 interface TemplateData {
   nodeId: string;
   currentMarket: string | null;
   templates: TemplatePerformance[];
-  marketOptions: Record<string, MarketOption>;
 }
+
+const hasMetricValue = (template: TemplatePerformance, metric: keyof NodePerformance) => {
+  return typeof template.node[metric] === 'number';
+};
 
 const selectedMetric = ref(props.defaultMetric);
 
-// Always compare with the premium market counterpart
-const selectedMarket = computed(() => {
-  if (!templateData.value?.currentMarket || !templateData.value.marketOptions) {
-    return '';
-  }
-
-  const currentMarket = templateData.value.marketOptions[templateData.value.currentMarket];
-  const baseSlug = currentMarket?.slug.replace('-community', '') || '';
-
-  // Find premium market (either current market or its counterpart)
-  const premiumMarket = (
-    Object.entries(templateData.value.marketOptions) as [string, MarketOption][]
-  ).find(([, market]) => market.type === 'PREMIUM' && market.slug === baseSlug);
-
-  return premiumMarket ? premiumMarket[0] : '';
-});
-
 const metricOptions = [
-  { value: 'tokensPerSecond', label: 'Tokens / Second' },
-  { value: 'temperature', label: 'Temperature (°C)' },
-  { value: 'wattage', label: 'Power Usage (W)' },
-];
+  { value: 'tokensPerSecond', label: 'Tokens / Second', queryMetric: 'tokens_per_second' },
+  { value: 'gpuTemperatureAvg', label: 'Temperature (°C)', queryMetric: 'gpu_temperature_avg' },
+  { value: 'gpuWattageAvg', label: 'Power Usage (W)', queryMetric: 'gpu_wattage_avg' },
+] as const;
+
+const selectedMetricOption = computed(
+  () => metricOptions.find((metric) => metric.value === selectedMetric.value) ?? metricOptions[0]
+);
 
 // Fetch template performance data using useAPI at the top level
-const apiUrl = computed(() => `/api/benchmarks/node-template-performance/${props.nodeId}`);
+const apiUrl = computed(() => {
+  const params = new URLSearchParams({
+    source: 'github',
+    metrics: selectedMetricOption.value.queryMetric,
+  });
+
+  return `/api/benchmarks/node-template-performance/${props.nodeId}?${params.toString()}`;
+});
 
 const { data: templateData, pending: loading, error: fetchError } = useAPI(
   apiUrl,
@@ -143,29 +133,41 @@ const error = computed(() => {
   return null;
 });
 
-// Market options for dropdown (filtered to only show PREMIUM markets)
-const marketOptions = computed<Record<string, MarketOption>>(() => {
-  const allMarkets = (templateData.value?.marketOptions ||
-    {}) as Record<string, MarketOption>;
-  return Object.fromEntries(
-    Object.entries(allMarkets).filter(
-      ([, market]: [string, MarketOption]) => market.type === 'PREMIUM'
-    )
+const filteredTemplates = computed(() => {
+  if (!templateData.value?.templates) {
+    return [];
+  }
+
+  return templateData.value.templates.filter((template: TemplatePerformance) =>
+    hasMetricValue(template, selectedMetric.value as keyof NodePerformance)
   );
 });
 
+const hasRenderableData = computed(() => {
+  return filteredTemplates.value.length > 0 && !loading.value && !error.value;
+});
 
 const chartData = computed(() => {
-  if (!templateData.value?.templates || templateData.value.templates.length === 0) {
+  if (filteredTemplates.value.length === 0) {
     return { labels: [], datasets: [] };
   }
 
-  const templates = templateData.value.templates;
+  const templates = filteredTemplates.value;
   const labels = templates.map((t: TemplatePerformance) => t.templateName);
   
   const nodeData = templates.map((t: TemplatePerformance) => {
     const value = t.node[selectedMetric.value as keyof NodePerformance];
     return typeof value === 'number' ? value : 0;
+  });
+
+  const marketData = templates.map((t: TemplatePerformance) => {
+    const value = t.market?.[selectedMetric.value as keyof NodePerformance];
+    return typeof value === 'number' ? value : 0;
+  });
+
+  const hasMarketComparison = templates.some((t: TemplatePerformance) => {
+    const value = t.market?.[selectedMetric.value as keyof NodePerformance];
+    return typeof value === 'number';
   });
 
   const datasets = [
@@ -177,20 +179,9 @@ const chartData = computed(() => {
     },
   ];
 
-  // Add market comparison data if a market is selected
-  if (selectedMarket.value && templateData.value.marketOptions[selectedMarket.value]) {
-    const selectedMarketData = templateData.value.marketOptions[selectedMarket.value];
-    const marketData = templates.map((t: TemplatePerformance) => {
-      const marketTemplate = selectedMarketData.templates[t.templateId];
-      if (marketTemplate) {
-        const value = marketTemplate[selectedMetric.value as keyof NodePerformance];
-        return typeof value === 'number' ? value : 0;
-      }
-      return 0;
-    });
-
+  if (templateData.value.currentMarket && hasMarketComparison) {
     datasets.push({
-      label: `${selectedMarketData.name} Average`,
+      label: `${templateData.value.currentMarket} Average`,
       data: marketData,
       backgroundColor: 'hsl(116, 92%, 49%)', // Bulma secondary color
       borderWidth: 1,
@@ -204,28 +195,21 @@ const chartData = computed(() => {
 });
 
 const comparisonLegend = computed<
-  Array<{ templateId: string; templateName: string; delta: number }>
+  Array<{ templateId: string; templateName: string; delta: number | null }>
 >(() => {
-  if (
-    !selectedMarket.value ||
-    !templateData.value?.templates ||
-    !templateData.value.marketOptions[selectedMarket.value]
-  ) {
+  if (filteredTemplates.value.length === 0 || !templateData.value?.currentMarket) {
     return [];
   }
 
-  const marketData = templateData.value.marketOptions[selectedMarket.value];
-
-  return templateData.value.templates.map((t: TemplatePerformance) => {
+  return filteredTemplates.value.map((t: TemplatePerformance) => {
     const nodeVal = Number(
       t.node[selectedMetric.value as keyof NodePerformance] ?? 0
     );
-    const marketTemplate = marketData.templates[t.templateId];
     const marketVal = Number(
-      marketTemplate?.[selectedMetric.value as keyof NodePerformance] ?? 0
+      t.market?.[selectedMetric.value as keyof NodePerformance] ?? 0
     );
 
-    let delta = 0;
+    let delta: number | null = null;
     if (Number.isFinite(nodeVal) && Number.isFinite(marketVal) && marketVal !== 0) {
       delta = Math.round(((nodeVal - marketVal) / marketVal) * 100);
     }
@@ -240,12 +224,13 @@ const comparisonLegend = computed<
 
 const comparisonDeltaByLabel = computed<Record<string, number>>(() => {
   return Object.fromEntries(
-    comparisonLegend.value.map((item) => [item.templateName, item.delta])
+    comparisonLegend.value
+      .filter((item): item is { templateId: string; templateName: string; delta: number } => item.delta !== null)
+      .map((item) => [item.templateName, item.delta])
   );
 });
 
 const chartOptions = computed(() => {
-  const deltaMap = comparisonDeltaByLabel.value;
   const labels = chartData.value.labels || [];
 
   return {
@@ -316,7 +301,7 @@ const percentileOverlayPlugin = {
 };
 
 const chartPlugins = computed(() => {
-  const hasComparison = comparisonLegend.value.length > 0 && selectedMarket.value;
+  const hasComparison = comparisonLegend.value.length > 0;
   return hasComparison ? [percentileOverlayPlugin] : [];
 });
 </script>
