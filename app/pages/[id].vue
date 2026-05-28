@@ -156,11 +156,12 @@
     </div>
   </div>
   
-  <!-- Template Performance Comparison -->
+  <!-- Host Metrics Overview -->
   <div v-if="nodeAddress && nodeSpecs">
-    <TemplatePerformanceChart
-      title="Template Performance Comparison"
+    <HostMetricsChart
+      title="Host Metrics Overview"
       :node-id="nodeAddress"
+      :market-address="benchmarkMarketId"
       default-metric="tokensPerSecond"
     />
   </div>
@@ -198,7 +199,7 @@ import {
 import ArrowUpIcon from '@/assets/img/icons/arrow-up.svg?component';
 import ArrowDownIcon from '@/assets/img/icons/arrow-down.svg?component';
 import DeploymentList from '~/components/Job/DeploymentList.vue';
-import TemplatePerformanceChart from "~/components/Host/TemplatePerformanceChart.vue";
+import HostMetricsChart from "~/components/Host/HostMetricsChart.vue";
 import UptimeChart from "~/components/Host/UptimeChart.vue";
 import UptimeRewards from "~/components/Host/UptimeRewards.vue";
 import HostQuickDetails from "~/components/Host/HostQuickDetails.vue";
