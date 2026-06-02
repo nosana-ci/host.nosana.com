@@ -13,7 +13,7 @@
     </ul>
   </div>
 
-  <div v-show="activeTab === 'overview'">
+  <div v-show="!isOwner || activeTab === 'overview'">
   <!-- Earnings Section - Only show if connected wallet matches node -->
   <div v-if="showUptimeSection" class="columns">
     <div class="column is-4">
