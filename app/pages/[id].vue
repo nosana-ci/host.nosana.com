@@ -192,14 +192,15 @@
   </div>
   </div>
 
-  <!-- TEMPORARY placeholder — replaced by <RecentBenchmarks> in Task 5 -->
-  <div
+  <RecentBenchmarks
     v-if="isOwner && benchmarksOpened"
     v-show="activeTab === 'benchmarks'"
-    class="box mt-5"
-  >
-    <p>Benchmarks tab placeholder.</p>
-  </div>
+    :node-address="nodeAddress"
+    :is-owner="isOwner"
+    :connected="connected"
+    :public-key="publicKey"
+    :wallet="wallet"
+  />
 </template>
 
 <script setup lang="ts">
@@ -225,6 +226,7 @@ import HostMetricsChart from "~/components/Host/HostMetricsChart.vue";
 import UptimeChart from "~/components/Host/UptimeChart.vue";
 import UptimeRewards from "~/components/Host/UptimeRewards.vue";
 import HostQuickDetails from "~/components/Host/HostQuickDetails.vue";
+import RecentBenchmarks from "~/components/Host/RecentBenchmarks.vue";
 import { createSignedWalletAuthHeader } from "~/utils/createSignedWalletAuthHeader";
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
