@@ -240,4 +240,14 @@ html.dark-mode .run-badge {
   color: #cfcfcf;
   border-color: #555;
 }
+html.dark-mode .run-badge.ok {
+  background: rgba(31, 139, 29, 0.18);
+  border-color: #2f6b2e;
+  color: #7fe07d;
+}
+html.dark-mode .run-badge.bad {
+  background: rgba(241, 70, 104, 0.18);
+  border-color: #7a3343;
+  color: #ff8fa3;
+}
 </style>

@@ -160,6 +160,9 @@ function ruleClass(m: FeedbackMetric): string {
 html.dark-mode .fb-report {
   border-color: #444;
 }
+html.dark-mode .fb-report strong {
+  color: #ffffff;
+}
 html.dark-mode .fb-counts,
 html.dark-mode .fb-measured {
   color: #cfcfcf;
