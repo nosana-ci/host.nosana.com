@@ -2,6 +2,18 @@
   <LayoutTopBar :title="'Host'">
   </LayoutTopBar>
 
+  <div v-if="isOwner" class="tabs benchmark-tabs mt-4">
+    <ul>
+      <li :class="{ 'is-active': activeTab === 'overview' }">
+        <a @click="activeTab = 'overview'">Overview</a>
+      </li>
+      <li :class="{ 'is-active': activeTab === 'benchmarks' }">
+        <a @click="selectBenchmarks">Benchmarks</a>
+      </li>
+    </ul>
+  </div>
+
+  <div v-show="!isOwner || activeTab === 'overview'">
   <!-- Earnings Section - Only show if connected wallet matches node -->
   <div v-if="showUptimeSection" class="columns">
     <div class="column is-4">
@@ -178,6 +190,17 @@
       :states="[1, 2]"
     />
   </div>
+  </div>
+
+  <RecentBenchmarks
+    v-if="isOwner && benchmarksOpened"
+    v-show="activeTab === 'benchmarks'"
+    :node-address="nodeAddress"
+    :is-owner="isOwner"
+    :connected="connected"
+    :public-key="publicKey"
+    :wallet="wallet"
+  />
 </template>
 
 <script setup lang="ts">
@@ -203,6 +226,7 @@ import HostMetricsChart from "~/components/Host/HostMetricsChart.vue";
 import UptimeChart from "~/components/Host/UptimeChart.vue";
 import UptimeRewards from "~/components/Host/UptimeRewards.vue";
 import HostQuickDetails from "~/components/Host/HostQuickDetails.vue";
+import RecentBenchmarks from "~/components/Host/RecentBenchmarks.vue";
 import { createSignedWalletAuthHeader } from "~/utils/createSignedWalletAuthHeader";
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
@@ -216,6 +240,14 @@ const route = useRoute();
 
 // Get node address from route params
 const nodeAddress = computed(() => route.params.id as string);
+
+// --- Node detail tabs (Overview | Benchmarks). Benchmarks is owner-only. ---
+const activeTab = ref<'overview' | 'benchmarks'>('overview');
+const benchmarksOpened = ref(false); // flips true on first Benchmarks open so the view mounts once and caches
+const selectBenchmarks = () => {
+  benchmarksOpened.value = true;
+  activeTab.value = 'benchmarks';
+};
 
 // Get active address (either wallet or Google-generated)
 const activeAddress = computed(() => {
@@ -1000,6 +1032,17 @@ onMounted(() => {
 });
 </script>
 <style scoped>
+.benchmark-tabs {
+  margin-bottom: 0;
+}
+.benchmark-tabs li.is-active a {
+  border-bottom-color: #10e80c;
+  color: inherit;
+}
+html.dark-mode .benchmark-tabs a {
+  color: #ffffff;
+}
+
 .heading {
   text-transform: uppercase;
   font-size: 0.8rem;
