@@ -80,8 +80,6 @@ const runningJobAddress = computed(() => {
 
 const totalJobs = computed(() => props.jobs?.totalJobs ?? null)
 
-const hostApiStatus = computed(() => props.loadingNodeInfo ? '...' : (props.nodeInfo?.info ? 'Online' : 'Offline'))
-
 const { markets, getMarkets } = useMarkets()
 if (!markets.value) {
   getMarkets()
@@ -106,22 +104,56 @@ const isNode = computed(() => {
   return runningJobAddress.value || totalJobs.value || props.nodeSpecs?.marketAddress || queueInfo.value
 })
 
+// The node's own live self-reported state category (see the node's
+// classifyState). Present only when the node API is reachable.
+const nodeState = computed<string | null>(() => props.nodeInfo?.state ?? null)
+
+// The node API returns a payload (state/info) only when reachable; on error the
+// fetch resolves to null. Use that presence as the online/offline signal.
+const nodeReachable = computed(() => !!(props.nodeInfo && (props.nodeInfo.state || props.nodeInfo.info)))
+
+// Host API reachability, shown as its own field.
+const hostApiStatus = computed(() => props.loadingNodeInfo ? '...' : (nodeReachable.value ? 'Online' : 'Offline'))
+
+// Human-readable label per node self-reported state category.
+const NODE_STATE_TEXT: Record<string, string> = {
+  RUNNING_JOB: 'Running',
+  QUEUED: 'Queued',
+  JOINING_MARKET: 'Queued',
+  RESTARTING: 'Restarting',
+  STARTING: 'Starting',
+  BENCHMARKING: 'Benchmarking',
+  HEALTHCHECK: 'Health check',
+  OTHER: 'Online',
+}
+
 const statusType = computed(() => {
   if (props.loadingNodeInfo || props.loadingJobs) return null
   if (!isNode.value) return null
-  if (queueInfo.value) return 'QUEUED'
+  // Prefer the node's own live self-report when reachable — it reflects what
+  // the node is actually doing even when on-chain job/queue data is stale.
+  if (nodeReachable.value) {
+    if (nodeState.value === 'RUNNING_JOB') return 'RUNNING'
+    if (nodeState.value === 'QUEUED' || nodeState.value === 'JOINING_MARKET') return 'QUEUED'
+    // Reachable but transient/idle (restarting, benchmarking, …) → rendered as
+    // text via statusText, no badge.
+    return null
+  }
+  // Node API unreachable — fall back to on-chain signals, else offline. A
+  // detected running job takes precedence over stale queue membership.
   if (runningJobAddress.value) return 'RUNNING'
-  if (!props.nodeInfo?.info) return 'OFFLINE'
-  return null
+  if (queueInfo.value) return 'QUEUED'
+  return 'OFFLINE'
 })
 
 const statusText = computed(() => {
   if (props.loadingNodeInfo || props.loadingJobs) return '...'
   if (!isNode.value) return 'Not a node'
-  if (statusType.value === 'RUNNING') return 'Running'
-  if (statusType.value === 'QUEUED') return 'Queued'
-  if (statusType.value === 'OFFLINE') return 'Offline'
-  if (props.nodeInfo?.info) return '(Re)starting'
+  if (nodeReachable.value) {
+    return (nodeState.value && NODE_STATE_TEXT[nodeState.value]) || 'Online'
+  }
+  if (runningJobAddress.value) return 'Running'
+  if (queueInfo.value) return 'Queued'
   return 'Offline'
 })
 
@@ -129,52 +161,52 @@ const metricFields: MetricField[] = [
   {
     key: 'gpu',
     label: 'GPU',
-    paths: ['nodeInfo.info.gpus.devices.0.name', 'metrics.gpu.devices.0.name', 'nodeSpecs.gpus.0.gpu'],
+    paths: ['metrics.gpu.devices.0.name', 'nodeSpecs.gpus.0.gpu'],
   },
   {
     key: 'cliVersion',
     label: 'CLI Version',
-    paths: ['nodeInfo.info.version', 'metrics.node_version', 'nodeSpecs.nodeVersion'],
+    paths: ['metrics.node_version', 'nodeSpecs.nodeVersion'],
     formatter: 'version',
   },
   {
     key: 'nvidiaDriver',
     label: 'NVIDIA Driver',
-    paths: ['nodeInfo.info.gpus.nvml_driver_version', 'metrics.gpu.nvml_driver_version', 'metrics.nvml_version', 'nodeSpecs.nvmlVersion'],
+    paths: ['metrics.gpu.nvml_driver_version', 'metrics.nvml_version', 'nodeSpecs.nvmlVersion'],
     formatter: 'version',
   },
   {
     key: 'cudaVersion',
     label: 'CUDA Version',
-    paths: ['nodeInfo.info.gpus.cuda_driver_version', 'metrics.gpu.runtime_version', 'metrics.cuda_runtime_version', 'nodeSpecs.cudaVersion'],
+    paths: ['metrics.gpu.runtime_version', 'metrics.cuda_runtime_version', 'nodeSpecs.cudaVersion'],
     formatter: 'version',
   },
   {
     key: 'country',
     label: 'Country',
-    paths: ['nodeInfo.info.country', 'metrics.network.country', 'metrics.country', 'nodeSpecs.country'],
+    paths: ['metrics.network.country', 'metrics.country', 'nodeSpecs.country'],
     formatter: 'country',
   },
   {
     key: 'systemEnv',
     label: 'System Environment',
-    paths: ['nodeInfo.info.system_environment', 'metrics.system_environment', 'nodeSpecs.systemEnvironment'],
+    paths: ['metrics.system_environment', 'nodeSpecs.systemEnvironment'],
   },
   {
     key: 'cpu',
     label: 'CPU',
-    paths: ['nodeInfo.info.cpu.model', 'metrics.cpu.cpu_model', 'metrics.cpu_model', 'nodeSpecs.cpu'],
+    paths: ['metrics.cpu.cpu_model', 'metrics.cpu_model', 'nodeSpecs.cpu'],
   },
   {
     key: 'diskSpace',
     label: 'Disk Space',
-    paths: ['nodeInfo.info.disk_gb', 'metrics.disk_gb', 'nodeSpecs.diskSpace'],
+    paths: ['metrics.disk_gb', 'nodeSpecs.diskSpace'],
     formatter: 'gb',
   },
   {
     key: 'ram',
     label: 'RAM',
-    paths: ['nodeInfo.info.ram_mb', 'metrics.ram_gb', 'nodeSpecs.ram'],
+    paths: ['metrics.ram_gb', 'nodeSpecs.ram'],
     transformPaths: {
       'metrics.ram_gb': 'gbToMb',
     },
@@ -189,7 +221,6 @@ const metricFields: MetricField[] = [
 ]
 
 const gridSources = computed(() => ({
-  nodeInfo: props.nodeInfo,
   metrics: props.metrics,
   nodeSpecs: props.nodeSpecs,
 }))
