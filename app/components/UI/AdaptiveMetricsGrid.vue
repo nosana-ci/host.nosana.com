@@ -129,8 +129,12 @@ export const formatMetricValue = (
     case "mb":
       return `${Math.round(Number(value))} MB`;
     case "country": {
-      const region = new Intl.DisplayNames(["en"], { type: "region" }).of(String(value));
-      return region || String(value);
+      try {
+        const region = new Intl.DisplayNames(["en"], { type: "region" }).of(String(value));
+        return region || String(value);
+      } catch {
+        return String(value);
+      }
     }
     case "version":
     case "address":

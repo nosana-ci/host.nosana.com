@@ -160,7 +160,7 @@
       :sol-balance="solBalance"
       :loading-balances="loading"
     />
-    <div v-else-if="nodeAddress && (loadingNodeSpecs || loadingNodeInfo )" class="column is-full">
+    <div v-else-if="nodeAddress && loadingNodeSpecs" class="column is-full">
       <p>Loading system details...</p>
     </div>
     <div v-else-if="nodeAddress" class="column is-full">
@@ -169,7 +169,7 @@
   </div>
   
   <!-- Host Metrics Overview -->
-  <div v-if="nodeAddress && nodeSpecs">
+  <div v-if="nodeAddress && nodeSpecs && benchmarkMarketIdReady">
     <HostMetricsChart
       title="Host Metrics Overview"
       :node-id="nodeAddress"
@@ -876,23 +876,24 @@ const { data: nodeSpecs, pending: loadingNodeSpecs } = useAPI(
   }
 );
 
-// NEW: Node Info (public node API)
+const nodeSpecsMetrics = computed(() => nodeSpecs.value?.metrics ?? null);
+
+// Live node status from the node's own API. NOTE: this is used ONLY to derive
+// the node's live status (online / offline / restarting / running / …) via its
+// `state` field. System specs (CPU/GPU/etc.) are sourced from host-manager, not
+// from here, so a flaky node API can no longer blank or flicker the specs grid.
 const nodeInfoUrl = computed(() => {
-  if (!nodeAddress.value || !nodeSpecs.value) return ''; // Fetch only if we have nodeAddress and potentially valid nodeSpecs
+  if (!nodeAddress.value || !nodeSpecs.value) return '';
   return `https://${nodeAddress.value}.${useRuntimeConfig().public.nodeDomain}/node/info`;
 });
 const { data: nodeInfo, pending: loadingNodeInfo } = useAPI(
   nodeInfoUrl,
   {
     immediate: false,
-    onRequestError: () => ({ info: null }),
-    onResponseError: () => ({ info: null }),
     default: () => null,
-    watch: [nodeInfoUrl]
+    watch: [nodeInfoUrl],
   }
 );
-
-const nodeSpecsMetrics = computed(() => nodeSpecs.value?.metrics ?? null);
 
 const createEmptyUptimeRewards = () => ({
   claimableUptimeNosRewards: 0,
@@ -959,6 +960,7 @@ const showUptimeSection = computed(() => {
 
 // Market relation logic (already existing)
 const marketRelationId = ref<string | null>(null);
+const marketRelationSettled = ref(false);
 
 // Define a function to fetch the market relation
 async function fetchMarketRelation() {
@@ -980,9 +982,12 @@ async function fetchMarketRelation() {
     } catch (err) {
       console.error("Error fetching market relation:", err);
        marketRelationId.value = null;
+    } finally {
+      marketRelationSettled.value = true;
     }
   } else {
       marketRelationId.value = null;
+      marketRelationSettled.value = true;
   }
 }
 
@@ -990,12 +995,34 @@ watch(
   nodeSpecs,
   (newSpecs) => {
     marketRelationId.value = null;
+    marketRelationSettled.value = false;
     if (newSpecs && newSpecs.status === "ONBOARDED" && newSpecs.marketAddress) {
       fetchMarketRelation();
+    } else {
+      marketRelationSettled.value = true;
     }
   },
   { immediate: true, deep: true }
 );
+
+// Whether benchmarkMarketId has finished resolving (including the async
+// market-relation lookup for ONBOARDED nodes with a market). Rendering
+// HostMetricsChart before this settles causes it to mount with an
+// undefined marketAddress, fetch, then immediately re-fetch once the real
+// value resolves - flashing the chart and then hiding it during the
+// second fetch's loading state.
+const benchmarkMarketIdReady = computed(() => {
+  if (!nodeSpecs.value) {
+    return false;
+  }
+  if (!nodeSpecs.value.marketAddress) {
+    return true;
+  }
+  if (nodeSpecs.value.status === "ONBOARDED") {
+    return marketRelationSettled.value;
+  }
+  return true;
+});
 
 const benchmarkMarketId = computed(() => {
   if (!nodeSpecs.value || !nodeSpecs.value.marketAddress) {

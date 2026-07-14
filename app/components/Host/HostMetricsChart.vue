@@ -352,7 +352,12 @@ const getCurrentMarketAggregate = (payload: MarketMetricAggregatesResponse | nul
   }
 
   if (props.marketAddress) {
-    return payload.markets.find((market) => market.marketAddress === props.marketAddress) ?? payload.markets[0];
+    // The fetched payload can lag behind props.marketAddress while a new
+    // fetch triggered by a marketAddress change is still in flight (see
+    // apiUrl/useAPI below). Falling back to markets[0] in that window
+    // would silently compare against an unrelated market, so treat a
+    // missing match as "no data yet" instead.
+    return payload.markets.find((market) => market.marketAddress === props.marketAddress) ?? null;
   }
 
   return payload.markets[0];
@@ -649,7 +654,7 @@ const chartData = computed(() => {
       return null;
     }
 
-    return roundMetricValue((value / item.market) * 50);
+    return roundMetricValue((value / item.market) * 100);
   };
 
   const nodeData = chartItems.value.map((item) =>
@@ -666,7 +671,7 @@ const chartData = computed(() => {
   ];
 
   const marketData = chartItems.value.map((item) =>
-    isAllMetricsView.value ? (item.market !== null ? 50 : null) : (item.market ?? 0)
+    isAllMetricsView.value ? (item.market !== null ? 100 : null) : (item.market ?? 0)
   );
   const hasMarketComparison = chartItems.value.some((item) => item.market !== null);
 
@@ -741,10 +746,17 @@ const chartOptions = computed(() => {
         title: {
           display: true,
           text: isAllMetricsView.value
-            ? 'Relative to Market Avg (50 = market average)'
+            ? '% of Market Average (100% = average)'
             : selectedMetricOption.value?.label ?? '',
         },
         beginAtZero: true,
+        ticks: isAllMetricsView.value
+          ? {
+              callback(value: unknown) {
+                return `${value}%`;
+              },
+            }
+          : undefined,
       },
     },
     plugins: {
@@ -770,7 +782,7 @@ const chartOptions = computed(() => {
               rawValue === null ? 'n/a' : `${roundMetricValue(rawValue)}${item.unitLabel ? ` ${item.unitLabel}` : ''}`;
 
             if (isAllMetricsView.value) {
-              const normalizedValue = typeof context.parsed.y === 'number' ? roundMetricValue(context.parsed.y) : 'n/a';
+              const normalizedValue = typeof context.parsed.y === 'number' ? `${roundMetricValue(context.parsed.y)}%` : 'n/a';
               return `${context.dataset.label}: ${formattedRawValue} (${normalizedValue})`;
             }
 
