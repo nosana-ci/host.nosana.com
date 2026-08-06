@@ -15,7 +15,7 @@
 
   <div v-show="!isOwner || activeTab === 'overview'">
   <!-- Earnings Section - Only show if connected wallet matches node -->
-  <div v-if="showUptimeSection" class="columns">
+  <div v-if="isOwner" class="columns">
     <div class="column is-4">
       <!-- <h3 class="title is-4 mt-5 mb-4">Earnings</h3> -->
       <div class="columns is-multiline mb-4">
@@ -127,21 +127,23 @@
   <!-- Moved Earnings History Section End -->
 
   <!-- Uptime Container - Only show if owner -->
-  <div 
-    class="box mt-5" 
-    v-if="showUptimeSection"
+  <div
+    class="box mt-5"
+    v-if="isOwner && nodeAddress && nodeSpecs"
   >
     <UptimeChart :node-address="nodeAddress" />
 
-    <hr class="my-4">
-    <UptimeRewards 
-      :rewards="uptimeRewards"
-      :loading-rewards="loadingUptimeRewards"
-      :connected="connected && isOwner"
-      :public-key="publicKey"
-      :wallet="wallet"
-      @refresh-rewards="refreshUptimeRewards"
-    />
+    <template v-if="hasSignedUptimeRewards">
+      <hr class="my-4">
+      <UptimeRewards
+        :rewards="uptimeRewards"
+        :loading-rewards="loadingUptimeRewards"
+        :connected="connected && isOwner"
+        :public-key="publicKey"
+        :wallet="wallet"
+        @refresh-rewards="refreshUptimeRewards"
+      />
+    </template>
   </div>
 
   <!-- <h3 class="title is-4 mt-5 mb-4">Info</h3> -->
@@ -905,6 +907,7 @@ const createEmptyUptimeRewards = () => ({
 const {
   data: uptimeRewards,
   pending: loadingUptimeRewards,
+  error: uptimeRewardsError,
   refresh: refreshUptimeRewards,
 } = useMyAsyncData('uptime-rewards', async () => {
   if (
@@ -937,25 +940,10 @@ const {
   disableToastOnError: true,
 });
 
-const claimableUptimeNosRewards = computed(() => {
-  const rawValue = uptimeRewards.value?.claimableUptimeNosRewards ?? 0;
-  return Number(rawValue) || 0;
-});
-
-const totalClaimedUptimeNosRewards = computed(() => {
-  const rawValue = uptimeRewards.value?.totalClaimedUptimeNosRewards ?? 0;
-  return Number(rawValue) || 0;
-});
-
-const showUptimeSection = computed(() => {
-  if (!isOwner.value || !nodeAddress.value || !nodeSpecs.value) {
-    return false;
-  }
-
-  return (
-    claimableUptimeNosRewards.value > 0 ||
-    totalClaimedUptimeNosRewards.value > 0
-  );
+// Claim button stays hidden until the wallet has actually signed the auth message
+const hasSignedUptimeRewards = computed(() => {
+  if (!connected.value || !publicKey.value || !wallet.value) return false;
+  return !loadingUptimeRewards.value && !uptimeRewardsError.value;
 });
 
 // Market relation logic (already existing)
