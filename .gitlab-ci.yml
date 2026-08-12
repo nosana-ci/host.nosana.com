@@ -5,3 +5,4 @@ include:
 variables:
   NODE_VERSION: 22
   OUTPUT_DIR: .output/public
+  GITHUB_REPO: host.nosana.com
